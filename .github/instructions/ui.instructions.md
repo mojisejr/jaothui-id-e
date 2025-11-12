@@ -187,7 +187,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 <button className="bg-primary text-primary-foreground hover:bg-primary/90
                    px-6 py-3 rounded-lg font-medium min-h-[44px]
                    transition-colors duration-200
-                   focus:outline-none focus:ring-2 focus:ring-primary/50">
+                   focus:outline-hidden focus:ring-2 focus:ring-primary/50">
   ยืนยัน
 </button>
 ```
@@ -235,7 +235,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
     className="flex h-11 w-full rounded-md border border-input bg-background
              px-3 py-2 text-sm ring-offset-background file:border-0
              file:bg-transparent file:text-sm file:font-medium
-             placeholder:text-muted-foreground focus-visible:outline-none
+             placeholder:text-muted-foreground focus-visible:outline-hidden
              focus-visible:ring-2 focus-visible:ring-ring
              focus-visible:ring-offset-2 disabled:cursor-not-allowed
              disabled:opacity-50"
@@ -277,7 +277,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 
 ##### Floating Glass Card
 ```tsx
-<div className="bg-card/80 backdrop-blur-sm border border-border
+<div className="bg-card/80 backdrop-blur-xs border border-border
                    rounded-2xl shadow-lg p-6 max-w-lg mx-auto">
   <div className="space-y-4">
     {/* Card content */}
@@ -287,7 +287,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 
 ##### Animal List Card
 ```tsx
-<div className="bg-card/80 backdrop-blur-sm border border-border
+<div className="bg-card/80 backdrop-blur-xs border border-border
                    rounded-xl shadow-md p-4 hover:shadow-lg transition-shadow">
   <div className="flex items-start gap-4">
     <div className="w-16 h-16 rounded-lg bg-muted flex items-center justify-center">
@@ -318,7 +318,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 #### Transparent Navbar
 ```tsx
 <nav className="fixed top-0 left-0 right-0 z-50
-                bg-background/80 backdrop-blur-sm border-b border-border">
+                bg-background/80 backdrop-blur-xs border-b border-border">
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div className="flex items-center justify-between h-16">
       <div className="flex items-center">
@@ -336,7 +336,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 
 #### Main Container Layout
 ```tsx
-<div className="min-h-screen bg-gradient-to-br from-background to-surface">
+<div className="min-h-screen bg-linear-to-br from-background to-surface">
   <main className="pt-16 pb-8 px-4 sm:px-6 lg:px-8">
     <div className="max-w-2xl mx-auto">
       {/* Page content */}
@@ -348,7 +348,7 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 #### Bottom Navigation (Mobile)
 ```tsx
 <div className="fixed bottom-0 left-0 right-0 z-40
-                bg-background/90 backdrop-blur-sm border-t border-border
+                bg-background/90 backdrop-blur-xs border-t border-border
                 safe-area-inset-bottom">
   <div className="grid grid-cols-3 h-16">
     <button className="flex flex-col items-center justify-center gap-1
