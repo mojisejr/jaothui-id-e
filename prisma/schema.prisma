@@ -1,21 +1,153 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-// Placeholder model for initial setup
-// TODO: Replace with actual schema models from DATABASE.md
-model Placeholder {
-  id        String   @id @default(uuid())
-  createdAt DateTime @default(now())
+// Enums
+enum Role {
+  OWNER
+  MEMBER
+}
+
+enum AnimalType {
+  WATER_BUFFALO
+  SWAMP_BUFFALO
+  CATTLE
+  GOAT
+  PIG
+  CHICKEN
+}
+
+enum AnimalGender {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum AnimalStatus {
+  ACTIVE
+  TRANSFERRED
+  DECEASED
+  SOLD
+}
+
+enum ActivityStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  OVERDUE
+}
+
+// Models
+model User {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lineId       String?   @unique @map("line_id")
+  username     String?   @unique
+  passwordHash String?   @map("password_hash")
+  firstName    String?
+  lastName     String?
+  avatarUrl    String?   @map("avatar_url")
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  ownedFarms    Farm[]       @relation("OwnerFarms")
+  memberships   FarmMember[]
+  createdEvents Activity[] @relation("Creator")
+  completedEvents Activity[] @relation("Completer")
+
+  @@map("users")
+}
+
+model Farm {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String    @default("ฟาร์มของฉัน") @map("farm_name")
+  ownerId   String    @map("owner_id") @db.Uuid
+  province  String?   @default("ไม่ระบุ")
+  code      String?   @unique @map("farm_code")
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  owner   User         @relation("OwnerFarms", fields: [ownerId], references: [id], onDelete: Cascade)
+  members FarmMember[]
+  animals Animal[]
+  events  Activity[]
+
+  @@map("farms")
+}
+
+model FarmMember {
+  id       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  farmId   String   @map("farm_id") @db.Uuid
+  userId   String   @map("user_id") @db.Uuid
+  role     Role     @default(MEMBER)
+  joinedAt DateTime @default(now()) @map("joined_at") @db.Timestamptz(6)
+
+  // Relations
+  farm Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([farmId, userId])
+  @@map("farm_members")
+}
+
+model Animal {
+  id          String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  farmId      String        @map("farm_id") @db.Uuid
+  tagId       String        @map("tag_id")
+  name        String?
+  type        AnimalType    @default(WATER_BUFFALO)
+  gender      AnimalGender  @default(FEMALE)
+  status      AnimalStatus  @default(ACTIVE)
+  birthDate   DateTime?     @map("birth_date") @db.Date
+  color       String?
+  weightKg    Decimal?      @map("weight_kg") @db.Decimal(8, 2)
+  heightCm    Int?          @map("height_cm")
+  motherTag   String?       @map("mother_tag")
+  fatherTag   String?       @map("father_tag")
+  genome      String?
+  imageUrl    String?       @map("image_url")
+  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  farm       Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  activities Activity[]
+
+  @@unique([farmId, tagId])
+  @@map("animals")
+}
+
+model Activity {
+  id           String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  farmId       String         @map("farm_id") @db.Uuid
+  animalId     String         @map("animal_id") @db.Uuid
+  title        String
+  description  String?
+  activityDate DateTime      @map("activity_date") @db.Date
+  dueDate      DateTime?      @map("due_date") @db.Date
+  status       ActivityStatus @default(PENDING)
+  statusReason String?        @map("status_reason")
+  createdBy    String         @map("created_by") @db.Uuid
+  completedBy  String?        @map("completed_by") @db.Uuid
+  completedAt  DateTime?      @map("completed_at") @db.Timestamptz(6)
+  createdAt    DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  farm       Farm    @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  animal     Animal  @relation(fields: [animalId], references: [id], onDelete: Cascade)
+  creator    User    @relation("Creator", fields: [createdBy], references: [id], onDelete: SetNull)
+  completer User?   @relation("Completer", fields: [completedBy], references: [id], onDelete: SetNull)
+
+  @@map("activities")
 }
