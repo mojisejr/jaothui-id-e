@@ -1,11 +1,11 @@
 ## Project Overview
 
-**Project Name**: [PROJECT_NAME] (Workflow Template)
+**Project Name**: Jaothui ID-Trace System
 
-**Repository**: [REPOSITORY_URL]
-**Author**: [AUTHOR_NAME] <[EMAIL]>
+**Repository**: https://github.com/mojisejr/jaothui-id-e
+**Author**: mojisejr
 
-**Description**: Generic, reusable agent workflow and implementation template. Use this repository to document mandatory agent safety rules, workflow commands, templates, and the implementation checklist used by automated agents and developers. Replace placeholders with project-specific metadata when adapting this template.
+**Description**: A mobile-first web application designed for Thai buffalo farmers to manage livestock through digital identification, activity tracking, and farm operations management with secure role-based access control.
 
 ---
 
@@ -162,11 +162,11 @@ All slash commands follow this structure:
 
 1. **Create Feature Branch**: `git checkout -b feature/task-[issue-number]-[description]`
 2. **Execute Implementation**: Follow task requirements, use TodoWrite for complex tasks
-3. **Build Validation**: `cargo build --release` (100% success - zero warnings)
-4. **Lint Validation**: `cargo clippy --all-targets --all-features` (100% pass)
-5. **Format Check**: `cargo fmt -- --check` (consistent formatting)
-6. **Type Check**: `cargo check` (comprehensive type checking)
-7. **Run Tests**: `cargo test` (if applicable)
+3. **Build Validation**: `npm run build` (100% success - zero errors)
+4. **Lint Validation**: `npm run lint` (100% pass - zero warnings)
+5. **Format Check**: Prettier auto-formatting (consistent formatting)
+6. **Type Check**: `npm run type-check` (comprehensive type checking)
+7. **Run Tests**: `npm test` (if applicable)
 8. **Commit Changes**:
 
    ```bash
@@ -174,9 +174,9 @@ All slash commands follow this structure:
    git commit -m "feat: [feature description]
 
    - Address #[issue-number]: [task title]
-   - Build validation: 100% PASS (cargo build --release)
-   - Clippy validation: 100% PASS (cargo clippy)
-   - Format validation: 100% PASS (cargo fmt)
+   - Build validation: 100% PASS (npm run build)
+   - Lint validation: 100% PASS (npm run lint)
+   - Format validation: 100% PASS (prettier)
 
    🤖 Generated with Claude Code
    Co-Authored-By: Claude <noreply@anthropic.com>"
@@ -374,71 +374,81 @@ All slash commands follow this structure:
 
 ### Core Stack
 
-- **Language**: [PRIMARY_LANGUAGE] (e.g., Rust, TypeScript, Python)
-- **Web Framework**: [WEB_FRAMEWORK] (project-dependent)
-- **Database**: [DATABASE] (e.g., PostgreSQL, MySQL, SQLite)
-- **Cache/Queue**: [CACHE_QUEUE] (e.g., Redis)
-- **Authentication**: [AUTH_METHOD] (e.g., OAuth/JWT)
-- **AI Engine**: [AI_ENGINE] (optional)
-- **Payments**: [PAYMENT_PROVIDER] (optional)
-- **Deployment**: [DEPLOYMENT_PLATFORM]
-- **Frontend**: [FRONTEND_TECH] (optional)
+- **Language**: TypeScript (Node.js)
+- **Web Framework**: Next.js 14.x with App Router
+- **Database**: PostgreSQL 15+ (via Supabase)
+- **ORM**: Prisma
+- **Authentication**: better-auth with LINE OAuth integration
+- **Frontend**: React with shadcn-ui + Tailwind CSS v4
+- **Storage**: Supabase Storage with RLS policies
+- **Deployment**: Vercel
+- **Real-time**: Supabase Real-time (future enhancement)
 
 ### Project Structure
 
 ```
-[project-name]/
+jaothui-id-e/
 ├── README.md                   # Project overview and quick start
-├── docs/                       # Workflow and templates (issue/task templates)
-├── src/                        # Source code (language-dependent)
-│   ├── main.*                  # Server or application entry point
-│   ├── config.*                # Configuration management
-│   ├── handlers/               # Request handlers / API endpoints
-│   ├── services/               # Business logic and integrations
-│   ├── models/                 # Data structures and types
-   └── db/                     # Database helpers and migrations
-├── migrations/                 # Database migrations (if applicable)
-└── .env.example                # Environment variables template
+├── docs/                       # Documentation and templates
+├── src/                        # Next.js source code
+│   ├── app/                    # Next.js 14 App Router pages and API routes
+│   ├── components/             # React components (shadcn/ui + custom)
+│   ├── lib/                    # Utility functions and configurations
+│   ├── prisma/                 # Database schema and migrations
+│   └── types/                  # TypeScript type definitions
+├── public/                     # Static assets
+├── .env.example                # Environment variables template
+├── package.json                # Node.js dependencies and scripts
+├── tailwind.config.ts          # Tailwind CSS configuration
+├── next.config.ts              # Next.js configuration
+└── tsconfig.json               # TypeScript configuration
 ```
 
-### Database Schema (example)
+### Database Schema
 
 ```
-# Sample core tables (adapt to project needs)
-users (id, external_id, name, email, avatar, created_at)
-events (id, user_id, type, payload, created_at)
-payments (id, user_id, provider_id, amount, status, created_at)
+# Core tables for livestock management
+users (id, email, name, avatar, role, line_user_id, created_at)
+farms (id, name, code, province, description, owner_id, created_at)
+farm_members (id, farm_id, user_id, role, joined_at)
+animals (id, farm_id, tag_id, name, birth_date, gender, color, weight, height, mother_tag, father_tag, genome, status, image_url, created_at)
+activities (id, farm_id, animal_id, assigned_user_id, title, description, activity_type, scheduled_date, due_date, status, completed_at, cancelled_at, cancellation_reason, created_at)
 ```
 
 ### Key Features
 
-- **Tarot Readings**: Question submission → AI processing (1 combined agent) → Result storage
-- **Credit System**: Stars (paid currency) + Coins (earned currency), exchangeable 100:1
-- **User Authentication**: LINE LIFF OAuth with JWT tokens
-- **Payment Processing**: Stripe integration with webhook handling
-- **Referral System**: Generate referral codes, earn coins per signup
-- **AI Engine**: Single optimized GPT-4o Mini call (combines analysis + interpretation)
-- **Queue System**: Upstash Redis for async reading processing
-- **Real-time Status**: Check reading processing status via polling or WebSocket
+- **Livestock Digital Identification**: Complete animal profiles with unique tag IDs, comprehensive tracking
+- **Multi-Farm Management**: Support for multiple farms with role-based access control
+- **Authentication System**: LINE OAuth for farm owners, traditional login for staff members
+- **Activity Management**: Feeding, medication, vaccination, breeding, and general care tracking
+- **Role-Based Access Control**: Owner vs Staff permissions with data isolation
+- **Mobile-First Interface**: Responsive design optimized for field operations
+- **Thai Language Support**: BE calendar format and localized interface
+- **Notification System**: Activity due dates, overdue tasks, and status updates
+- **Image Storage**: Animal photos with Supabase Storage and RLS policies
+- **Real-time Updates**: Activity status changes and notifications
 
 ### Development Commands
 
 ```bash
-cargo run              # Development server (default: http://localhost:8080)
-cargo build --release  # Production build (creates optimized binary)
-cargo test             # Run all tests
-cargo clippy           # Lint checks
-cargo fmt              # Code formatting
+npm run dev            # Development server (default: http://localhost:3000)
+npm run build          # Production build (creates optimized .next build)
+npm run start          # Start production server
+npm test               # Run all tests
+npm run lint           # ESLint checks
+npm run type-check     # TypeScript type checking
+npx prisma studio      # Database management UI
+npx prisma migrate dev # Database migrations
 ```
 
 ### Performance Metrics
 
 - **API Response Time**: Target < 200ms (p95)
-- **Reading Generation**: 1-2 seconds (single optimized AI call)
-- **Concurrent Connections**: 5,000+ (Actix-web capable)
-- **Memory Usage**: ~3-5MB per request (Rust efficiency)
-- **Startup Time**: ~10ms
-- **Monthly Cost**: ~$50-75 (Render + Supabase + Upstash)
+- **Page Load Time**: < 3 seconds for initial page load
+- **Concurrent Users**: Support 100+ simultaneous users
+- **Database Performance**: < 50ms per query with proper indexing
+- **Build Time**: ~30 seconds for production build
+- **Monthly Cost**: ~$25-50 (Vercel + Supabase)
 
 ---
 
@@ -446,41 +456,44 @@ cargo fmt              # Code formatting
 
 ### Code Quality Requirements
 
-- **Rust**: Edition 2021, strict type system (eliminates entire classes of bugs)
-- **Cargo Check**: Zero compiler warnings (enforced)
-- **Clippy Lints**: Zero warnings (`cargo clippy`)
-- **Formatting**: `cargo fmt` auto-formatting, consistent across project
+- **TypeScript**: Strict typing with comprehensive type coverage
+- **ESLint**: Zero warnings (enforced via Next.js configuration)
+- **Prettier**: Consistent code formatting across project
 - **Build**: 100% success rate before commit
-- **Tests**: Unit tests for critical paths (payments, auth)
-- **Async Safety**: No panics, proper error handling in all async contexts
+- **Tests**: Unit tests for critical paths (auth, data validation)
+- **Type Safety**: Full TypeScript coverage with proper interfaces
+- **Error Handling**: Comprehensive error boundaries and validation
 
 ### API Quality Standards
 
 - **Response Times**: p95 < 200ms for all endpoints
 - **Error Handling**: Always return structured JSON errors with status codes
-- **Rate Limiting**: Enforce per-user limits via Redis
-- **Input Validation**: Validate all user inputs before processing
-- **JWT Security**: 7-day token expiration, secure secret management
-- **HTTPS Only**: Enforce in production, automatic via Render
+- **Rate Limiting**: Enforce per-user limits via database tracking
+- **Input Validation**: Validate all user inputs with zod schemas
+- **Session Security**: 7-day session expiration, secure cookie management
+- **HTTPS Only**: Enforced in production via Vercel
+- **Row-Level Security**: Zero-trust data access via Supabase RLS
 
 ### Performance Standards
 
-- **Startup Time**: API ready within 10ms
-- **Database Queries**: < 50ms per query (with indexes)
-- **Redis Operations**: < 10ms per operation
-- **AI Processing**: 1-2 seconds per reading (queue-based async)
+- **Startup Time**: Next.js server ready within 2-3 seconds
+- **Database Queries**: < 50ms per query (with proper indexing)
+- **Page Navigation**: < 200ms for client-side transitions
+- **API Response**: < 200ms for all endpoints (p95)
 - **Concurrent Users**: Handle 100+ concurrent connections
-- **Memory Usage**: < 10MB base memory + ~1MB per concurrent request
+- **Bundle Size**: < 1MB initial JavaScript load
+- **Image Optimization**: WebP format with lazy loading
 
 ### Security Standards
 
-- **Secrets Management**: Use .env, never commit sensitive data
-- **Database Access**: All queries use parameterized statements (SQLx)
-- **Authentication**: JWT tokens with proper expiration
+- **Secrets Management**: Use .env.local, never commit sensitive data
+- **Database Access**: All queries use Prisma ORM with parameterization
+- **Authentication**: better-auth with LINE OAuth + session management
 - **CORS**: Configured for frontend domain only
 - **Rate Limiting**: Per-user limits on sensitive endpoints
-- **Webhook Verification**: Verify Stripe webhook signatures
-- **Error Messages**: Never expose sensitive system details
+- **Row-Level Security**: Zero-trust data access via Supabase RLS policies
+- **Input Validation**: All inputs validated via zod schemas
+- **File Security**: Image uploads restricted to safe formats and sizes
 
 ### Template-Guided Quality
 
@@ -503,20 +516,20 @@ cargo fmt              # Code formatting
 ### Performance Metrics
 
 - **Target**: API response time < 200ms (p95)
-- **Goal**: 99.9% uptime for Tarot reading service
-- **Reliability**: 99.99% accurate reading delivery
+- **Goal**: 99.9% uptime for livestock management service
+- **Reliability**: 99.99% data consistency and availability
 - **Database**: PostgreSQL via Supabase with automatic scaling
-- **Queue**: Upstash Redis with serverless scaling
-- **Cost**: ~$50-75/month for full stack at scale
+- **Storage**: Supabase Storage with RLS policies
+- **Cost**: ~$25-50/month for full stack at scale
 
 ### Security Notes
 
-- **Input Validation**: Comprehensive validation for all user inputs
-- **Authentication**: LINE LIFF OAuth + JWT with 7-day expiration
-- **Data Protection**: Encrypted connections, secure token storage
-- **Access Control**: Role-based access (user, admin levels)
-- **Payment Security**: Stripe webhook verification, idempotent operations
-- **Audit Trail**: Complete logs for readings and transactions
+- **Input Validation**: Comprehensive validation for all user inputs via zod
+- **Authentication**: better-auth with LINE OAuth + session management
+- **Data Protection**: Encrypted connections, secure session storage
+- **Access Control**: Role-based access (Owner, Staff levels)
+- **Data Security**: Row-Level Security policies for zero-trust access
+- **Audit Trail**: Complete logs for animal and activity management
 
 ---
 
