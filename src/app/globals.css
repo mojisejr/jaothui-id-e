@@ -56,6 +56,9 @@
     --shadow-2xl: 0rem 0.5rem 1.5rem 0.25rem hsl(0 0% 0% / 1.25);
     --tracking-normal: 0em;
     --spacing: 0.25rem;
+    
+    /* Minimum touch target size for elderly users */
+    --touch-target: 2.75rem; /* 44px */
   }
 
   .dark {
