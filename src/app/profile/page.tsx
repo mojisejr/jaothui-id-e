@@ -144,7 +144,7 @@ export default function ProfilePage() {
       />
 
       {/* Main Content Area - with top padding for fixed navigation */}
-      <div className="pt-16 px-4 py-6">
+      <div className="pt-30 px-4 py-6">
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Profile Card Section */}
           <div className="flex justify-center">

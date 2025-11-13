@@ -66,7 +66,7 @@ export function ProfileCard({
 
   return (
     <Card
-      className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm shadow ${className}`}
+      className={`${className} shadow-none`}
       role="region"
       aria-label="ข้อมูลฟาร์ม"
     >
@@ -79,7 +79,7 @@ export function ProfileCard({
           aria-label={`รูปประจำตัวฟาร์ม${farm.name}`}
         >
           {/* Avatar Container - 120px × 120px rounded square */}
-          <div className="w-[120px] h-[120px] rounded-xl overflow-hidden bg-muted border-2 border-border shadow-md">
+          <div className="w-full h-full rounded-xl overflow-hidden bg-muted border-2 border-border">
             <Image
               src={displayAvatar}
               alt={`รูปประจำตัวฟาร์ม${farm.name}`}
