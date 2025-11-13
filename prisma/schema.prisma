@@ -65,6 +65,8 @@ model User {
   memberships   FarmMember[]
   createdEvents Activity[] @relation("Creator")
   completedEvents Activity[] @relation("Completer")
+  sessions     Session[]
+  accounts     Account[]
 
   @@map("users")
 }
@@ -152,4 +154,55 @@ model Activity {
   completer User?   @relation("Completer", fields: [completedBy], references: [id], onDelete: SetNull)
 
   @@map("activities")
+}
+
+// Better Auth Models
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model Account {
+  id                String    @id @default(cuid())
+  accountId         String    @map("account_id")
+  providerId        String    @map("provider_id")
+  userId            String    @map("user_id") @db.Uuid
+  accessToken       String?   @map("access_token")
+  refreshToken      String?   @map("refresh_token")
+  idToken           String?   @map("id_token")
+  accessTokenExpiresAt DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope             String?
+  password          String?
+  createdAt         DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt         DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@map("accounts")
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([identifier, value])
+  @@map("verifications")
 }
