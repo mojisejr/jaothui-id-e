@@ -40,6 +40,7 @@ export const auth = betterAuth({
    * Email and Password Authentication
    * Used for farm staff members
    * Argon2 is used by default for password hashing
+   * Email verification disabled since we use username authentication
    */
   emailAndPassword: {
     enabled: true,
@@ -49,13 +50,27 @@ export const auth = betterAuth({
   },
 
   /**
+   * Email Verification Configuration
+   * Disabled since we use username-based authentication for staff
+   * and LINE OAuth doesn't require email verification
+   */
+  emailVerification: {
+    sendOnSignUp: false,
+    sendOnSignIn: false,
+  },
+
+  /**
    * User Model Field Mapping
-   * Maps the email field to username field for staff authentication
-   * This allows staff to login with username instead of email
+   * Maps Better Auth's default fields to our custom schema
+   * - email → username (for staff authentication)
+   * - name → firstName (for LINE OAuth profile names)
+   * - image → avatarUrl (for profile pictures)
    */
   user: {
     fields: {
       email: "username",
+      name: "firstName",
+      image: "avatarUrl",
     },
   },
 
@@ -90,7 +105,7 @@ export const auth = betterAuth({
   },
 
   /**
-   * Advanced Security Options
+   * Advanced Security and Database Options
    */
   advanced: {
     /**
@@ -98,14 +113,14 @@ export const auth = betterAuth({
      * This enables HTTPS-only cookies
      */
     useSecureCookies: process.env.NODE_ENV === "production",
-    
+
     /**
      * Cross subdomain cookies configuration
      */
     crossSubDomainCookies: {
       enabled: false,
     },
-    
+
     /**
      * Default cookie attributes for all auth cookies
      */
@@ -114,6 +129,14 @@ export const auth = betterAuth({
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax" as const,
       path: "/",
+    },
+
+    /**
+     * Database ID Generation Configuration
+     * Let database handle ID generation for all models
+     */
+    database: {
+      generateId: false, // Let database generate all IDs
     },
   },
 
