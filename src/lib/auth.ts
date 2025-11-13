@@ -50,12 +50,16 @@ export const auth = betterAuth({
 
   /**
    * User Model Field Mapping
-   * Maps the email field to username field for staff authentication
-   * This allows staff to login with username instead of email
+   * Maps Better Auth's default fields to our custom schema
+   * - email → username (for staff authentication)
+   * - name → firstName (for LINE OAuth profile names)
+   * - image → avatarUrl (for profile pictures)
    */
   user: {
     fields: {
       email: "username",
+      name: "firstName",
+      image: "avatarUrl",
     },
   },
 
