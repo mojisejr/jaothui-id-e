@@ -2,7 +2,7 @@
  * Route Protection Middleware - Jaothui ID-Trace System
  * 
  * This middleware protects routes that require authentication.
- * It checks if the user has a valid session using better-auth
+ * It checks if the user has a valid session cookie from better-auth
  * and redirects to login page if not authenticated.
  * 
  * Protected Routes:
@@ -16,7 +16,7 @@
  * - /favicon.ico - Favicon
  * 
  * Security Features:
- * - Session validation using better-auth
+ * - Session cookie validation
  * - Automatic redirect to login for unauthenticated users
  * - Preserves redirect URL for post-login navigation
  * - CSRF protection via better-auth
@@ -27,7 +27,6 @@
 
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "@/lib/auth";
 
 /**
  * List of paths that require authentication
@@ -47,6 +46,11 @@ const PUBLIC_ROUTES = ["/", "/login"];
  * This function runs on every request and checks if the route
  * requires authentication. If authentication is required and
  * the user is not authenticated, it redirects to the login page.
+ * 
+ * Note: This middleware uses Edge Runtime compatible code only.
+ * Session validation is done by checking for the presence of
+ * the better-auth session cookie. Full session verification
+ * happens at the component level.
  * 
  * @param request - The incoming Next.js request
  * @returns NextResponse - Either continues the request or redirects to login
@@ -74,15 +78,14 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // For protected routes, verify authentication
+  // For protected routes, verify authentication via session cookie
   try {
-    // Get the session using better-auth
-    const session = await auth.api.getSession({
-      headers: request.headers,
-    });
-
-    // If no session exists, redirect to login
-    if (!session) {
+    // Get the session cookie from the request
+    // better-auth stores session in a cookie named "better-auth.session_token"
+    const sessionCookie = request.cookies.get("better-auth.session_token");
+    
+    // If no session cookie exists, redirect to login
+    if (!sessionCookie || !sessionCookie.value) {
       const loginUrl = new URL("/login", request.url);
       
       // Preserve the original URL to redirect back after login
@@ -91,7 +94,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(loginUrl);
     }
 
-    // Session exists, allow access to protected route
+    // Session cookie exists, allow access to protected route
+    // Note: Full session validation (expiry, validity) happens at the component level
+    // This middleware only does basic cookie presence check for performance
     return NextResponse.next();
   } catch (error) {
     // If there's an error checking the session, redirect to login for safety
