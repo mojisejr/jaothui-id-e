@@ -1,38 +1,26 @@
 import { betterAuth } from "better-auth";
-import { memoryAdapter } from "better-auth/adapters/memory";
-
-/**
- * In-Memory Database Structure
- * This is a simple in-memory storage for development and testing
- * In production, this should be replaced with a persistent database adapter
- * 
- * Note: Index signature is required for memoryAdapter compatibility
- */
-const memoryDB: Record<string, any[]> = {
-  user: [],
-  session: [],
-  account: [],
-  verification: [],
-};
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { prisma } from "@/lib/prisma";
 
 /**
  * Better Auth Configuration
  * 
- * This configuration uses memory adapter for development/testing purposes.
+ * This configuration uses Prisma adapter for persistent database storage.
  * Features:
  * - LINE OAuth login for farm owners
  * - Email/Password authentication for staff members
  * - Argon2 password hashing (default in better-auth)
  * - Secure session management with 7-day expiration
  * - HTTP-only secure cookies
+ * - PostgreSQL database via Supabase with Prisma ORM
  */
 export const auth = betterAuth({
   /**
    * Database Configuration
-   * Using memory adapter for in-memory storage (no persistent database)
+   * Using Prisma adapter for persistent PostgreSQL storage via Supabase
    */
-  database: memoryAdapter(memoryDB, {
-    debugLogs: process.env.NODE_ENV === "development",
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
   }),
   
   /**
