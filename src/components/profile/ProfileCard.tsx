@@ -66,7 +66,7 @@ export function ProfileCard({
 
   return (
     <Card
-      className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm shadow-lg ${className}`}
+      className={`border-border bg-gradient-to-br from-primary/10 to-primary/5 backdrop-blur-sm shadow ${className}`}
       role="region"
       aria-label="ข้อมูลฟาร์ม"
     >
