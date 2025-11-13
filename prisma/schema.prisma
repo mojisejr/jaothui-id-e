@@ -48,15 +48,17 @@ enum ActivityStatus {
 
 // Models
 model User {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lineId       String?   @unique @map("line_id")
-  username     String?   @unique
-  passwordHash String?   @map("password_hash")
-  firstName    String?
-  lastName     String?
-  avatarUrl    String?   @map("avatar_url")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lineId        String?   @unique @map("line_id")
+  username      String?   @unique
+  passwordHash  String?   @map("password_hash")
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified") @db.Timestamptz(6)
+  firstName     String?
+  lastName      String?
+  avatarUrl     String?   @map("avatar_url")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
   ownedFarms    Farm[]       @relation("OwnerFarms")
