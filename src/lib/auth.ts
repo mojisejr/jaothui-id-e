@@ -69,6 +69,14 @@ export const auth = betterAuth({
       clientId: process.env.LINE_CLIENT_ID || "",
       clientSecret: process.env.LINE_CLIENT_SECRET || "",
       enabled: !!(process.env.LINE_CLIENT_ID && process.env.LINE_CLIENT_SECRET),
+      scopes: ["profile", "openid"],
+      mapProfileToUser: (profile) => {
+        return {
+          name: profile.name || 'LINE User',
+          image: profile.picture,
+          email: profile.email || `${profile.sub || 'unknown'}@line.placeholder`,
+        };
+      },
     },
   },
 
