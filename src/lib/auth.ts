@@ -40,12 +40,23 @@ export const auth = betterAuth({
    * Email and Password Authentication
    * Used for farm staff members
    * Argon2 is used by default for password hashing
+   * Email verification disabled since we use username authentication
    */
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
     minPasswordLength: 8,
     maxPasswordLength: 128,
+  },
+
+  /**
+   * Email Verification Configuration
+   * Disabled since we use username-based authentication for staff
+   * and LINE OAuth doesn't require email verification
+   */
+  emailVerification: {
+    sendOnSignUp: false,
+    sendOnSignIn: false,
   },
 
   /**
@@ -94,7 +105,7 @@ export const auth = betterAuth({
   },
 
   /**
-   * Advanced Security Options
+   * Advanced Security and Database Options
    */
   advanced: {
     /**
@@ -102,14 +113,14 @@ export const auth = betterAuth({
      * This enables HTTPS-only cookies
      */
     useSecureCookies: process.env.NODE_ENV === "production",
-    
+
     /**
      * Cross subdomain cookies configuration
      */
     crossSubDomainCookies: {
       enabled: false,
     },
-    
+
     /**
      * Default cookie attributes for all auth cookies
      */
@@ -118,6 +129,14 @@ export const auth = betterAuth({
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax" as const,
       path: "/",
+    },
+
+    /**
+     * Database ID Generation Configuration
+     * Let database handle ID generation for all models
+     */
+    database: {
+      generateId: false, // Let database generate all IDs
     },
   },
 
