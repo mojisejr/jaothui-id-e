@@ -38,7 +38,7 @@ const PROTECTED_ROUTES = ["/profile"];
  * List of paths that are public (no authentication required)
  * These routes are accessible to everyone
  */
-const PUBLIC_ROUTES = ["/", "/login"];
+const PUBLIC_ROUTES = ["/", "/login", "/profile-demo"];
 
 /**
  * Middleware function to protect routes
@@ -70,7 +70,7 @@ export async function middleware(request: NextRequest) {
 
   // Check if the current path is a protected route
   const isProtectedRoute = PROTECTED_ROUTES.some((route) =>
-    pathname.startsWith(route)
+    pathname === route || pathname.startsWith(route + "/")
   );
 
   // If not a protected route, allow access
