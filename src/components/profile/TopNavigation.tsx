@@ -157,9 +157,11 @@ export function TopNavigation({
               )}
               aria-label="โลโก้ JAOTHUI"
             >
-              <span className="text-2xl" role="img" aria-label="กระบือ">
-                🐃
-              </span>
+                <img 
+                src="/thuiLogo.png" 
+                alt="JAOTHUI Logo" 
+                className="h-8 w-8 object-contain"
+                />
             </button>
           </div>
         </div>
