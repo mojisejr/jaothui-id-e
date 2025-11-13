@@ -49,6 +49,17 @@ export const auth = betterAuth({
   },
 
   /**
+   * User Model Field Mapping
+   * Maps the email field to username field for staff authentication
+   * This allows staff to login with username instead of email
+   */
+  user: {
+    fields: {
+      email: "username",
+    },
+  },
+
+  /**
    * Social OAuth Providers Configuration
    * LINE OAuth for farm owners
    */
