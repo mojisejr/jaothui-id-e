@@ -17,29 +17,78 @@ Task Planning - Create atomic task GitHub Issues for implementation workflow.
 /plan Fix database migration performance issue
 ```
 
+### Enhanced Examples (with Hallucination Prevention)
+
+Before (hallucination risk):
+```bash
+/plan Implement comprehensive error handling system
+```
+
+After (reality-based):
+```bash
+# Plan analyzes codebase first:
+# - No testing framework exists → Setup Jest infrastructure
+# - Only Card/Button components exist → Error handling using existing patterns
+# - Current error handling: Basic try-catch → Enhance with Card-based displays
+/plan Add error handling using existing Card components and setup basic Jest testing
+```
+
 ## Implementation
 
 When creating a task issue:
 
-1. **Check Dependencies**:
+### Phase 1: Hallucination Prevention Analysis
+1. **Codebase Analysis**:
+   - Scan existing components and patterns
+   - Check `package.json` for installed dependencies
+   - Verify available technologies and tools
+   - Review current architecture and file structure
+
+2. **Context7 Research**:
+   - Document chosen technologies with official docs
+   - Verify best practices and implementation patterns
+   - Validate proposed solutions against documentation
+
+3. **Previous Issue Context Check**:
+   - Read all related issues for dependency context
+   - Verify sequential task relationships
+   - Check that referenced components actually exist/will exist
+   - Validate implementation order and prerequisites
+
+4. **Hallucination Prevention Checklist**:
+   - ✅ Codebase components analyzed?
+   - ✅ Dependencies verified in package.json?
+   - ✅ Previous issue context checked?
+   - ✅ Technology stack validated?
+   - ✅ Implementation patterns reviewed?
+   - ✅ File structure existence confirmed?
+   - ✅ Sequential dependencies verified?
+   - ✅ Context7 documentation consulted?
+   - ✅ Assumptions vs reality checked?
+   - ✅ MVP-appropriate scope confirmed?
+
+### Phase 2: Task Creation
+5. **Check Dependencies**:
    - Validate GitHub CLI (`gh`) availability
    - Verify `docs/TASK-ISSUE-TEMP.md` template exists
    - Get current execution mode from `/mode`
 
-2. **Create Task Issue**:
+6. **Create Task Issue**:
    - Title: `[TASK] {task description}`
    - Labels: `task`, `{mode}-assignment` (manual/copilot)
    - Body: Use `docs/TASK-ISSUE-TEMP.md` template
    - Replace placeholders: `{{TASK_DESCRIPTION}}`, `{{EXECUTION_MODE}}`, `{{DATE}}`, `{{ASSIGNEE}}`
+   - **Enhanced**: Include validated context and verified dependencies
 
-3. **Mode-Based Assignment**:
+7. **Mode-Based Assignment**:
    - **MANUAL**: Tasks assigned to human developer
    - **COPILOT**: Tasks assigned to @copilot
 
-4. **Display Results**:
+8. **Display Results**:
    - Show issue URL and number
    - Provide mode-specific next steps
    - List implementation requirements
+   - **Enhanced**: Show validation context and verified dependencies
 
 ## Template Integration
 
@@ -66,11 +115,17 @@ Uses `docs/TASK-ISSUE-TEMP.md` template which includes:
 ## Implementation Requirements
 
 All tasks require 100% validation:
-- **Build validation**: `cargo build --release`
-- **Clippy validation**: `cargo clippy --all-targets --all-features`
-- **Format validation**: `cargo fmt -- --check`
-- **Type check validation**: `cargo check`
-- **Test validation**: `cargo test` (if applicable)
+- **Build validation**: `npm run build` (Next.js project)
+- **Lint validation**: `npm run lint`
+- **Format validation**: Auto-formatting (prettier)
+- **Type check validation**: `npx tsc --noEmit`
+- **Test validation**: `npm run test` (if available)
+
+### Enhanced Validation Context
+- **Dependencies verified**: Based on actual `package.json` analysis
+- **Components confirmed**: Referenced components exist in codebase
+- **Patterns validated**: Follow established codebase patterns
+- **Scope realistic**: MVP-appropriate implementation requirements
 
 ## Workflow Integration
 
@@ -91,3 +146,10 @@ All tasks require 100% validation:
 - Tasks are atomic and focused on specific implementation
 - Current mode affects task assignment and implementation workflow
 - Ensure context is ready before creating tasks
+
+### Hallucination Prevention Features
+- **Reality-based planning**: All requirements validated against actual codebase
+- **Dependency verification**: Components and libraries verified before task creation
+- **Sequential validation**: Previous issue context checked for continuity
+- **Pattern compliance**: Tasks follow existing codebase architecture and patterns
+- **Scope realism**: MVP-appropriate requirements based on project maturity
