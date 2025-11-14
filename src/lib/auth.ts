@@ -148,7 +148,7 @@ export const auth = betterAuth({
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
       // Only target LINE OAuth callback success
-      if (ctx.path === "/api/auth/callback/line" && ctx.context.newSession?.user) {
+      if (ctx.path === "/callback/:id" && ctx.context?.newSession?.user) {
         const userId = ctx.context.newSession.user.id;
 
         try {
