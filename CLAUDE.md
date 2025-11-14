@@ -26,10 +26,10 @@
 - ✅ **ALWAYS** sync main branch before any implementation: `git checkout main && git pull origin main`
 - ✅ **ALWAYS** verify task issue exists: `#[issue-number]` before `=impl`
 - ✅ **ALWAYS** use feature branch naming: `feature/task-[issue-number]-[description]`
-- ✅ **ALWAYS** ensure 100% build success before commit: `cargo build --release`
-- ✅ **ALWAYS** ensure 100% clippy pass before commit: `cargo clippy --all-targets --all-features`
+- ✅ **ALWAYS** ensure 100% build success before commit: `npm run build`
+- ✅ **ALWAYS** ensure 100% lint pass before commit: `npm run lint`
 - ✅ **ALWAYS** use template-guided workflow with proper context validation
-- ✅ **ALWAYS** verify code formatting: `cargo fmt -- --check`
+- ✅ **ALWAYS** verify code formatting: Prettier auto-formatting (consistent formatting)
 
 ---
 
