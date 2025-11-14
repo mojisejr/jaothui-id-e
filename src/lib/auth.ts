@@ -1,4 +1,5 @@
 import { betterAuth } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/prisma";
 
@@ -141,11 +142,46 @@ export const auth = betterAuth({
   },
 
   /**
+   * Hooks for post-authentication operations
+   * Automatically creates farm for new LINE OAuth users
+   */
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // Only target LINE OAuth callback success
+      if (ctx.path === "/callback/:id" && ctx.context?.newSession?.user) {
+        const userId = ctx.context.newSession.user.id;
+
+        try {
+          // Check if user already has a farm
+          const existingFarm = await prisma.farm.findFirst({
+            where: { ownerId: userId }
+          });
+
+          if (!existingFarm) {
+            // Create default farm using schema defaults
+            await prisma.farm.create({
+              data: {
+                name: "ฟาร์มของฉัน",  // Uses schema default
+                province: "ไม่ระบุ",    // Uses schema default
+                ownerId: userId,
+              }
+            });
+            console.log(`Auto-created farm for new LINE OAuth user: ${userId}`);
+          }
+        } catch (error) {
+          // Log error but don't break authentication
+          console.error("Failed to auto-create farm:", error);
+        }
+      }
+    })
+  },
+
+  /**
    * Trusted origins for CSRF protection
    * In production, only allow requests from the configured base URL
    */
-  trustedOrigins: process.env.NODE_ENV === "production" 
-    ? [process.env.BETTER_AUTH_URL || ""] 
+  trustedOrigins: process.env.NODE_ENV === "production"
+    ? [process.env.BETTER_AUTH_URL || ""]
     : ["http://localhost:3000"],
 });
 
