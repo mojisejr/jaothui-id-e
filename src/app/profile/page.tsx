@@ -13,7 +13,7 @@
  * - Protected route (authentication required)
  * - Mobile-first responsive design (375px minimum width)
  * - Age-optimized layout for 30+ users
- * - Mock data integration for farm information
+ * - Real API integration for farm information
  * - Session integration for real user authentication and avatar
  * - Loading states and error handling
  * - Accessibility compliance (WCAG 2.1 AA)
@@ -23,7 +23,7 @@
  * - Elderly-friendly (44px+ touch targets, high contrast)
  * - Thai language native with English help text
  * - Component-based architecture
- * - Mock data ready for API integration
+ * - Real API integration with /api/farm endpoint
  *
  * @route /profile
  * @component ProfilePage
@@ -43,16 +43,18 @@ import { useSession, signOut } from "@/lib/auth-client";
 
 // Profile Components Integration
 import TopNavigation from "@/components/profile/TopNavigation";
-import { ProfileCard } from "@/components/profile/ProfileCard";
+import { ProfileCard, Farm } from "@/components/profile/ProfileCard";
 import MenuGrid, { defaultMenuItems } from "@/components/profile/MenuGrid";
 import { GhostLogoutButton } from "@/components/profile/GhostLogoutButton";
-
-// Mock Data Integration
-import { getMockFarmForUser } from "@/lib/mock-data";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, isPending, error } = useSession();
+
+  // Farm data state management
+  const [farm, setFarm] = React.useState<Farm | null>(null);
+  const [isLoadingFarm, setIsLoadingFarm] = React.useState(true);
+  const [farmError, setFarmError] = React.useState<string | null>(null);
 
   /**
    * Redirect to login if not authenticated
@@ -62,6 +64,73 @@ export default function ProfilePage() {
       router.push("/login");
     }
   }, [session, isPending, router]);
+
+  /**
+   * Create new farm using POST /api/farm
+   */
+  const createFarm = React.useCallback(async () => {
+    try {
+      const response = await fetch('/api/farm', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setFarm(data.farm);
+      } else {
+        const errorData = await response.json();
+        setFarmError(errorData.error || 'Failed to create farm');
+      }
+    } catch (error) {
+      console.error('Failed to create farm:', error);
+      setFarmError('เกิดข้อผิดพลาดในการสร้างฟาร์ม');
+    }
+  }, []);
+
+  /**
+   * Fetch farm data from /api/farm endpoint
+   * If farm doesn't exist (404), create one using POST
+   */
+  const fetchFarmData = React.useCallback(async () => {
+    try {
+      setIsLoadingFarm(true);
+      setFarmError(null);
+
+      const response = await fetch('/api/farm');
+
+      if (response.ok) {
+        const data = await response.json();
+        setFarm(data.farm);
+      } else if (response.status === 404) {
+        // Farm doesn't exist, create one
+        await createFarm();
+      } else {
+        const errorData = await response.json();
+        setFarmError(errorData.error || 'Failed to fetch farm data');
+      }
+    } catch (error) {
+      console.error('Failed to fetch farm data:', error);
+      setFarmError('เกิดข้อผิดพลาดในการโหลดข้อมูลฟาร์ม');
+    } finally {
+      setIsLoadingFarm(false);
+    }
+  }, [createFarm]);
+
+  /**
+   * Fetch farm data from API when user is authenticated
+   */
+  React.useEffect(() => {
+    if (session?.user?.id) {
+      fetchFarmData();
+    }
+  }, [session, fetchFarmData]);
+
+  /**
+   * Handle farm update from ProfileCard
+   */
+  const handleFarmUpdate = (updatedFarm: Farm) => {
+    setFarm(updatedFarm);
+  };
 
   /**
    * Loading state while checking authentication
@@ -122,12 +191,6 @@ export default function ProfilePage() {
   }
 
   /**
-   * Get mock farm data with real user ID integration
-   * In production, this would be replaced with actual API calls
-   */
-  const mockFarm = getMockFarmForUser(session.user?.id || "");
-
-  /**
    * Handle notification clicks (placeholder for future implementation)
    */
   const handleNotificationClick = () => {
@@ -148,11 +211,42 @@ export default function ProfilePage() {
         <div className="max-w-7xl mx-auto space-y-6">
           {/* Profile Card Section */}
           <div className="flex justify-center">
-            <ProfileCard
-              farm={mockFarm}
-              userAvatar={session.user?.image || undefined}
-              className="w-full max-w-md"
-            />
+            {isLoadingFarm ? (
+              <Card className="w-full max-w-md shadow-none">
+                <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                  <div
+                    className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                    role="status"
+                    aria-label="กำลังโหลด"
+                  >
+                    <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                      กำลังโหลด...
+                    </span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">กำลังโหลดข้อมูลฟาร์ม...</p>
+                </div>
+              </Card>
+            ) : farmError ? (
+              <Card className="w-full max-w-md shadow-none border-destructive">
+                <div className="flex flex-col items-center justify-center p-8 space-y-4">
+                  <p className="text-sm text-destructive text-center">{farmError}</p>
+                  <Button
+                    onClick={fetchFarmData}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    ลองใหม่
+                  </Button>
+                </div>
+              </Card>
+            ) : farm ? (
+              <ProfileCard
+                farm={farm}
+                userAvatar={session.user?.image || undefined}
+                onFarmUpdate={handleFarmUpdate}
+                className="w-full max-w-md"
+              />
+            ) : null}
           </div>
 
           {/* Menu Grid Section */}
