@@ -71,7 +71,6 @@ export const animalSchema = z.object({
    */
   gender: z
     .enum(["MALE", "FEMALE", "UNKNOWN"], { message: "กรุณาเลือกเพศ" })
-    .optional()
     .default("FEMALE"),
 
   /**
