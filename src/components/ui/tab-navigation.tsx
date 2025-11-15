@@ -156,7 +156,7 @@ const TabNavigation = React.forwardRef<HTMLDivElement, TabNavigationProps>(
 
                   // Active state styling - subtle indication
                   isActive
-                    ? "bg-background shadow-sm shadow-primary/10 text-primary border border-border/50"
+                    ? "bg-background shadow-xs shadow-primary/10 text-primary border border-border/50"
                     : "hover:bg-accent/50 text-muted-foreground hover:text-foreground",
 
                   // Focus states for accessibility

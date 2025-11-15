@@ -101,10 +101,15 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
         <div className="flex items-center justify-between gap-4">
           {/* Left: Animal Name and Info */}
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-sm text-foreground mb-1 truncate">
-              ชื่อ: {animal.name || '-'}
-            </h3>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+            <div className="mb-1">
+              <h3 className="font-semibold text-sm text-foreground truncate">
+                ชื่อ: {animal.name || '-'}
+              </h3>
+              <p className="text-[11px] text-muted-foreground/70">
+                หมายเลขแท็ก: {animal.tagId}
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground flex-wrap">
               <span>ว/ด/ป เกิด: {formatBirthDate(animal.birthDate)}</span>
               <span>•</span>
               <span>สี: {animal.color || '-'}</span>
@@ -113,16 +118,11 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
             </div>
           </div>
 
-          {/* Right: Status, Tag ID, and Notification */}
+          {/* Right: Status and Notification */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="text-right">
-              <Badge variant={getStatusBadgeVariant(animal.status)} className="text-xs mb-1">
-                {getStatusText(animal.status)}
-              </Badge>
-              <div className="text-[10px] text-muted-foreground whitespace-nowrap">
-                แท็ก: {animal.tagId}
-              </div>
-            </div>
+            <Badge variant={getStatusBadgeVariant(animal.status)} className="text-xs">
+              {getStatusText(animal.status)}
+            </Badge>
             
             {/* Notification Bell */}
             {notificationCount > 0 && (

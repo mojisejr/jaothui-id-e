@@ -344,7 +344,7 @@ export default function AnimalListTabsPage() {
             <div className="space-y-6">
               {/* Search and Filter Section */}
               <div className="flex justify-center">
-                <div className="w-full max-w-md">
+                <div className="w-full max-w-md overflow-visible">
                   <SearchFilter
                     searchQuery={searchQuery}
                     statusFilter={statusFilter}

@@ -98,7 +98,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
   }, [])
 
   return (
-    <div className="bg-card/80 backdrop-blur-sm shadow-none rounded-lg border p-4 space-y-4">
+    <div className="bg-card/80 backdrop-blur-sm shadow-none rounded-lg border p-4 space-y-4 relative z-20 overflow-visible">
       {/* Search Input */}
       <div className="relative">
         <div className="relative">
@@ -116,7 +116,7 @@ const SearchFilter: React.FC<SearchFilterProps> = ({
       {/* Status Dropdown and Clear Button */}
       <div className="flex gap-3">
         {/* Status Dropdown */}
-        <div className="status-dropdown relative flex-1">
+  <div className="status-dropdown relative flex-1 z-30">
           <Button
             variant="outline"
             onClick={() => setIsStatusDropdownOpen(!isStatusDropdownOpen)}

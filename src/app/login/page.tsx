@@ -125,7 +125,7 @@ export default function LoginPage() {
         </div>
 
         {/* Main Login Card */}
-        <Card className="border-border bg-card/80 backdrop-blur-sm shadow-lg">
+        <Card className="border-border bg-card/80 backdrop-blur-sm shadow-xs">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">
               เข้าสู่ระบบ

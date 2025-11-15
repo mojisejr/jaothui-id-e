@@ -40,7 +40,7 @@ export function GuideOverlay({
   return (
     <div className="fixed inset-0 z-50 bg-black/20 animate-in fade-in-0">
       <div className="absolute inset-0 flex items-center justify-center p-4">
-        <Card className="max-w-md w-full p-6 shadow-lg">
+        <Card className="max-w-md w-full p-6 shadow-xs">
           <div className="mb-4">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-lg font-semibold">{step.title}</h3>
