@@ -178,7 +178,7 @@ export function CreateAnimalForm({
   };
 
   return (
-    <Card className="w-full max-w-2xl mx-auto border-border bg-card/80 backdrop-blur-sm shadow-lg">
+    <Card className="w-full max-w-2xl mx-auto border-border bg-card/80 backdrop-blur-sm">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-center">
           เพิ่มข้อมูลกระบือในระบบ
