@@ -9,6 +9,7 @@
  * - Province display (16px, Medium)
  * - Inline editing with click-to-edit functionality
  * - First-time user setup flow with guidance
+ * - Progressive guidance with tooltips
  * - Session integration for user avatar
  * - Mobile-first responsive design
  * - Age-optimized for 30+ users
@@ -34,6 +35,8 @@ import Image from "next/image";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { GuideOverlay } from "@/components/ui/guide-overlay";
 
 /**
  * Farm Interface
@@ -88,6 +91,35 @@ export function ProfileCard({
   const isFirstTimeUser = farm.name === "ฟาร์มของฉัน" && farm.province === "ไม่ระบุ";
   const [showFirstTimeGuidance, setShowFirstTimeGuidance] = React.useState(isFirstTimeUser);
 
+  // Progressive guide state management
+  const [showGuide, setShowGuide] = React.useState(false);
+  const [currentGuideStep, setCurrentGuideStep] = React.useState(0);
+
+  // Define guide steps for farm setup
+  const farmSetupSteps = [
+    {
+      id: "farm-name",
+      title: "ตั้งชื่อฟาร์มของคุณ",
+      description: "คลิกที่ชื่อฟาร์มเพื่อแก้ไข ใส่ชื่อที่คุณต้องการเรียกฟาร์มของคุณ",
+      target: "[data-field='farm-name']",
+      position: "bottom" as const
+    },
+    {
+      id: "farm-province", 
+      title: "ระบุจังหวัด",
+      description: "เลือกจังหวัดที่ตั้งของฟาร์มของคุณเพื่อการจัดการที่ดีขึ้น",
+      target: "[data-field='farm-province']",
+      position: "bottom" as const
+    },
+    {
+      id: "save-changes",
+      title: "บันทึกการเปลี่ยนแปลง",
+      description: "กดปุ่มบันทึกเพื่อบันทึกข้อมูลฟาร์มของคุณ",
+      target: "[data-action='save-farm']",
+      position: "top" as const
+    }
+  ];
+
   /**
    * Update local state when farm prop changes
    */
@@ -96,6 +128,57 @@ export function ProfileCard({
     setEditedProvince(farm.province || "");
     setShowFirstTimeGuidance(farm.name === "ฟาร์มของฉัน" && farm.province === "ไม่ระบุ");
   }, [farm]);
+
+  /**
+   * Check if user should see progressive guide (first-time setup)
+   */
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasSeenGuide = localStorage.getItem('farm-setup-guide-completed');
+      const isFirstTimeUser = farm?.name === "ฟาร์มของฉัน" && farm?.province === "ไม่ระบุ";
+      
+      if (isFirstTimeUser && !hasSeenGuide && isEditing) {
+        setShowGuide(true);
+      }
+    }
+  }, [farm, isEditing]);
+
+  /**
+   * Handle guide completion
+   */
+  const handleGuideComplete = () => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('farm-setup-guide-completed', 'true');
+    }
+    setShowGuide(false);
+    setCurrentGuideStep(0);
+  };
+
+  /**
+   * Handle guide skip
+   */
+  const handleGuideSkip = () => {
+    setShowGuide(false);
+    setCurrentGuideStep(0);
+  };
+
+  /**
+   * Handle guide next step
+   */
+  const handleGuideNext = () => {
+    if (currentGuideStep < farmSetupSteps.length - 1) {
+      setCurrentGuideStep(currentGuideStep + 1);
+    }
+  };
+
+  /**
+   * Handle guide previous step
+   */
+  const handleGuidePrevious = () => {
+    if (currentGuideStep > 0) {
+      setCurrentGuideStep(currentGuideStep - 1);
+    }
+  };
 
   /**
    * Handle edit mode activation
@@ -233,16 +316,32 @@ export function ProfileCard({
                   >
                     ชื่อฟาร์ม
                   </label>
-                  <Input
-                    id="farm-name"
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    placeholder="ระบุชื่อฟาร์ม"
-                    className="text-center min-h-[44px]"
-                    aria-label="ชื่อฟาร์ม"
-                    disabled={isSaving}
-                  />
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-pointer">
+                          <Input
+                            id="farm-name"
+                            data-field="farm-name"
+                            type="text"
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            placeholder="ระบุชื่อฟาร์ม"
+                            className="text-center min-h-[44px]"
+                            aria-label="ชื่อฟาร์ม"
+                            disabled={isSaving}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="top" 
+                        className="text-xs max-w-[200px] lg:text-sm lg:max-w-none"
+                        avoidCollisions={true}
+                      >
+                        <p>กรอกชื่อที่คุณต้องการเรียกฟาร์มของคุณ</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
 
                 {/* Province Input */}
@@ -253,16 +352,32 @@ export function ProfileCard({
                   >
                     จังหวัด
                   </label>
-                  <Input
-                    id="farm-province"
-                    type="text"
-                    value={editedProvince}
-                    onChange={(e) => setEditedProvince(e.target.value)}
-                    placeholder="ระบุจังหวัด"
-                    className="text-center min-h-[44px]"
-                    aria-label="จังหวัด"
-                    disabled={isSaving}
-                  />
+                  <TooltipProvider delayDuration={300}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="cursor-pointer">
+                          <Input
+                            id="farm-province"
+                            data-field="farm-province"
+                            type="text"
+                            value={editedProvince}
+                            onChange={(e) => setEditedProvince(e.target.value)}
+                            placeholder="ระบุจังหวัด"
+                            className="text-center min-h-[44px]"
+                            aria-label="จังหวัด"
+                            disabled={isSaving}
+                          />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent 
+                        side="top" 
+                        className="text-xs max-w-[200px] lg:text-sm lg:max-w-none"
+                        avoidCollisions={true}
+                      >
+                        <p>ระบุจังหวัดที่ตั้งของฟาร์ม</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
 
                 {/* Error Message */}
@@ -275,6 +390,7 @@ export function ProfileCard({
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-2">
                   <Button
+                    data-action="save-farm"
                     onClick={handleSave}
                     disabled={isSaving}
                     className="flex-1 min-h-[44px]"
@@ -351,6 +467,17 @@ export function ProfileCard({
           )}
         </div>
       </div>
+
+      {/* Progressive Guide Overlay */}
+      <GuideOverlay
+        steps={farmSetupSteps}
+        currentStep={currentGuideStep}
+        onComplete={handleGuideComplete}
+        onSkip={handleGuideSkip}
+        onNext={handleGuideNext}
+        onPrevious={handleGuidePrevious}
+        isVisible={showGuide}
+      />
     </Card>
   );
 }
