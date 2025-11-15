@@ -8,6 +8,65 @@ global.fetch = jest.fn(() =>
   })
 ) as jest.Mock;
 
+// Polyfill Request and Response for API route tests
+if (typeof global.Request === 'undefined') {
+  global.Request = class Request {
+    url: string;
+    method: string;
+    headers: Map<string, string>;
+    body: any;
+
+    constructor(input: string | Request, init?: any) {
+      this.url = typeof input === 'string' ? input : input.url;
+      this.method = init?.method || 'GET';
+      this.headers = new Map();
+      this.body = init?.body || null;
+
+      if (init?.headers) {
+        Object.entries(init.headers).forEach(([key, value]) => {
+          this.headers.set(key, value as string);
+        });
+      }
+    }
+
+    async json() {
+      if (typeof this.body === 'string') {
+        return JSON.parse(this.body);
+      }
+      return this.body;
+    }
+
+    async text() {
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body);
+    }
+  } as any;
+}
+
+if (typeof global.Response === 'undefined') {
+  global.Response = class Response {
+    body: any;
+    status: number;
+    headers: Map<string, string>;
+
+    constructor(body?: any, init?: any) {
+      this.body = body;
+      this.status = init?.status || 200;
+      this.headers = new Map();
+    }
+
+    async json() {
+      if (typeof this.body === 'string') {
+        return JSON.parse(this.body);
+      }
+      return this.body;
+    }
+
+    async text() {
+      return typeof this.body === 'string' ? this.body : JSON.stringify(this.body);
+    }
+  } as any;
+}
+
 // Mock Next.js router
 jest.mock('next/navigation', () => ({
   useRouter: () => ({
