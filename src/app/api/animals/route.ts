@@ -91,28 +91,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Step 4: Verify user is farm member (security check)
-    const membership = await prisma.farmMember.findUnique({
-      where: {
-        farmId_userId: {
-          farmId: farm.id,
-          userId: session.user.id,
-        },
-      },
-    });
-
-    if (!membership) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "FORBIDDEN",
-            message: "คุณไม่มีสิทธิ์เข้าถึงฟาร์มนี้",
+    // Step 4: Verify user permissions (owner or member)
+    if (farm.ownerId !== session.user.id) {
+      // Only check membership for non-owners
+      const membership = await prisma.farmMember.findUnique({
+        where: {
+          farmId_userId: {
+            farmId: farm.id,
+            userId: session.user.id,
           },
-          timestamp: new Date().toISOString(),
         },
-        { status: 403 }
-      );
+      });
+
+      if (!membership) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "FORBIDDEN",
+              message: "คุณไม่มีสิทธิ์เข้าถึงฟาร์มนี้",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
     }
 
     // Step 5: Auto-populate farmId from session (farm isolation)
