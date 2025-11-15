@@ -60,19 +60,19 @@
 
 ### Mode-Based Execution System
 
-**Default Mode**: MANUAL (human implementation)
+**Default Mode**: MANUAL (Claude implementation)
 
 **Mode Commands**:
 
 ```bash
-=mode manual     # Tasks assigned to human developer
+=mode manual     # Tasks assigned to Claude (non-Copilot agent)
 =mode copilot     # Tasks assigned to @copilot
 =mode status      # Show current execution mode
 ```
 
 **Mode-Specific Behavior**:
 
-- **MANUAL Mode**: `=plan` creates tasks assigned to human, `=impl` waits for human implementation
+- **MANUAL Mode**: `=plan` creates tasks assigned to Claude, `=impl` triggers Claude implementation using code editing tools
 - **COPILOT Mode**: `=plan` creates tasks assigned to @copilot, `=impl` triggers copilot implementation
 
 ### Core Commands
@@ -176,8 +176,8 @@ All workflow commands are now available as proper Claude Code slash commands (ma
 
 **Post-Implementation**:
 
-- **MANUAL Mode**: User commits and pushes, then uses `=pr` to create PR
-- **COPILOT Mode**: Agent handles complete implementation including PR creation via `=pr`
+- **MANUAL Mode**: Claude implements and pushes to feature branch, user uses `/pr` to create PR
+- **COPILOT Mode**: GitHub Copilot implements and pushes to feature branch, user uses `/pr` to create PR
 
 ---
 
