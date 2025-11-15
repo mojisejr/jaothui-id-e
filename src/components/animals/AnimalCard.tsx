@@ -1,6 +1,5 @@
 import React from 'react'
-import Image from 'next/image'
-import { Bell, Image as ImageIcon } from 'lucide-react'
+import { Bell } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -66,78 +65,77 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
     }
   }
 
+  const formatBirthDate = (dateString?: string | null) => {
+    if (!dateString) return '-'
+    try {
+      const date = new Date(dateString)
+      const day = date.getDate().toString().padStart(2, '0')
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const year = date.getFullYear() + 543 // Convert to BE calendar
+      return `${day}/${month}/${year}`
+    } catch {
+      return '-'
+    }
+  }
+
+  const getGenderText = (gender: AnimalGender): string => {
+    switch (gender) {
+      case 'MALE':
+        return 'ผู้'
+      case 'FEMALE':
+        return 'เมีย'
+      case 'UNKNOWN':
+        return 'ไม่ทราบ'
+      default:
+        return gender
+    }
+  }
+
   return (
     <Card
-      className="shadow-none border-border hover:bg-accent/50 transition-colors cursor-pointer"
+      className="w-full border-border hover:shadow-sm transition-all cursor-pointer bg-card/80 backdrop-blur-xs"
       onClick={handleCardClick}
     >
-      <CardContent className="p-4">
-        <div className="flex items-center space-x-4">
-          {/* Animal Photo - 80x80px */}
-          <div className="relative flex-shrink-0">
-            {animal.imageUrl ? (
-              <div className="relative w-20 h-20">
-                <Image
-                  src={animal.imageUrl}
-                  alt={animal.name || animal.tagId}
-                  fill
-                  className="rounded-lg object-cover"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement
-                    target.style.display = 'none'
-                    const fallback = target.parentElement?.querySelector('.fallback-image')
-                    if (fallback) {
-                      (fallback as HTMLElement).style.display = 'flex'
-                    }
-                  }}
-                />
-              </div>
-            ) : null}
-            {/* Fallback placeholder */}
-            <div
-              className={`fallback-image w-20 h-20 rounded-lg bg-gray-100 flex items-center justify-center ${animal.imageUrl ? 'hidden' : 'flex'}`}
-            >
-              <ImageIcon className="w-8 h-8 text-gray-400" />
+      <CardContent className="p-3">
+        {/* Single Row Layout */}
+        <div className="flex items-center justify-between gap-4">
+          {/* Left: Animal Name and Info */}
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm text-foreground mb-1 truncate">
+              ชื่อ: {animal.name || '-'}
+            </h3>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
+              <span>ว/ด/ป เกิด: {formatBirthDate(animal.birthDate)}</span>
+              <span>•</span>
+              <span>สี: {animal.color || '-'}</span>
+              <span>•</span>
+              <span>เพศ: {getGenderText(animal.gender)}</span>
             </div>
           </div>
 
-          {/* Animal Information */}
-          <div className="flex-1 min-w-0">
-            <div className="space-y-2">
-              {/* Tag ID */}
-              <h3 className="font-medium text-sm truncate">
-                รหัส: {animal.tagId}
-              </h3>
-
-              {/* Name */}
-              {animal.name && (
-                <p className="text-sm text-muted-foreground truncate">
-                  ชื่อ: {animal.name}
-                </p>
-              )}
-
-              {/* Status and Notifications */}
-              <div className="flex items-center gap-2">
-                <Badge variant={getStatusBadgeVariant(animal.status)}>
-                  {getStatusText(animal.status)}
-                </Badge>
-
-                {/* Notification Bell */}
-                {notificationCount > 0 && (
-                  <div className="ml-auto flex items-center">
-                    <div className="relative">
-                      <Bell className="w-4 h-4 text-muted-foreground" />
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-1 -right-1 w-4 h-4 p-0 flex items-center justify-center text-[10px] min-w-[16px]"
-                      >
-                        {notificationCount > 99 ? '99+' : notificationCount}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
+          {/* Right: Status, Tag ID, and Notification */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="text-right">
+              <Badge variant={getStatusBadgeVariant(animal.status)} className="text-xs mb-1">
+                {getStatusText(animal.status)}
+              </Badge>
+              <div className="text-[10px] text-muted-foreground whitespace-nowrap">
+                แท็ก: {animal.tagId}
               </div>
             </div>
+            
+            {/* Notification Bell */}
+            {notificationCount > 0 && (
+              <div className="relative">
+                <Bell className="w-4 h-4 text-destructive" />
+                <Badge
+                  variant="destructive"
+                  className="absolute -top-1.5 -right-1.5 w-4 h-4 p-0 flex items-center justify-center text-[9px] font-bold"
+                >
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </Badge>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>

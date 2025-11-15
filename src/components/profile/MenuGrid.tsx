@@ -74,10 +74,10 @@ export const defaultMenuItems: MenuItem[] = [
   {
     id: "activities",
     icon: "📋",
-    label: "กิจกรรม",
-    helpText: "Activities",
-    href: "/activities",
-    description: "บันทึกและติดตามกิจกรรม",
+    label: "กระบือในฟาร์ม",
+    helpText: "Your Livestock",
+    href: "/animals",
+    description: "กระบือทั้งหมดในฟาร์มของคุณ",
   },
   {
     id: "treatments",
