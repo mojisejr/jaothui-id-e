@@ -56,25 +56,24 @@ Implementation Workflow - Execute GitHub issue implementation based on current m
 3. **Mode-Specific Execution**:
 
    **MANUAL Mode**:
-   - Provide detailed implementation guidance
-   - Show step-by-step workflow instructions
-   - Include validation requirements
-   - Display commit message format
-   - Provide next steps for human developer
+   - Agent (Claude) implements directly using code editing tools
+   - Execute all implementation steps automatically
+   - Handle all validation requirements
+   - Create commit with proper format
+   - Push branch to remote (NO PR creation)
 
    **COPILOT Mode**:
-   - Trigger automatic implementation
-   - Handle all validation steps
+   - GitHub Copilot handles implementation automatically
+   - Execute all validation steps
    - Create commit with proper format
-   - Push branch and create PR
+   - Push branch to remote (NO PR creation)
 
 4. **Validation Requirements** (100% required):
    ```bash
-   cargo build --release           # Build validation
-   cargo clippy --all-targets --all-features  # Lint validation
-   cargo fmt -- --check           # Format validation
-   cargo check                    # Type check validation
-   cargo test                     # Test validation (if applicable)
+   npm run build                  # Build validation
+   npm run lint                   # Lint validation
+   npm run type-check             # Type check validation
+   npm test                       # Test validation (if applicable)
    ```
 
 5. **Commit Format**:
@@ -82,9 +81,9 @@ Implementation Workflow - Execute GitHub issue implementation based on current m
    git commit -m "feat: [feature description]
 
    - Address #[issue-number]: [task title]
-   - Build validation: 100% PASS (cargo build --release)
-   - Clippy validation: 100% PASS (cargo clippy)
-   - Format validation: 100% PASS (cargo fmt)
+   - Build validation: 100% PASS (npm run build)
+   - Lint validation: 100% PASS (npm run lint)
+   - Type validation: 100% PASS (npm run type-check)
 
    🤖 Generated with Claude Code
    Co-Authored-By: Claude <noreply@anthropic.com>"
@@ -94,27 +93,20 @@ Implementation Workflow - Execute GitHub issue implementation based on current m
 
 ### MANUAL Mode
 
-**Output Includes**:
-- Task information (issue, title, branch)
-- Implementation steps checklist
-- Validation requirements
-- Commit message template
-- Next steps for human developer
-
-**Human Developer Responsibilities**:
-- Execute implementation according to task requirements
-- Run all validations before committing
-- Use proper commit format
-- Push branch and create PR with `/pr`
+**Agent (Claude) Execution**:
+- Read and analyze task requirements from GitHub issue
+- Implement code changes directly using editing tools (Read/Edit/Write)
+- Run all validation steps automatically (build, lint, type-check)
+- Create commit with proper format and push to feature branch
+- **NO PR creation** - ends with branch push
 
 ### COPILOT Mode
 
-**Automatic Execution**:
-- Complete implementation workflow
-- All validation steps
-- Proper commit formatting
-- Branch creation and push
-- PR creation via `/pr`
+**GitHub Copilot Execution**:
+- Trigger GitHub Copilot to handle implementation workflow
+- Monitor all validation steps completion
+- Ensure proper commit formatting and branch push
+- **NO PR creation** - ends with branch push
 
 ## Error Handling
 
