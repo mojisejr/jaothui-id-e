@@ -66,9 +66,9 @@ export const defaultMenuItems: MenuItem[] = [
   {
     id: "livestock",
     icon: "🐃",
-    label: "สัตว์เลี้ยง",
-    helpText: "Livestock",
-    href: "/animals",
+    label: "เพิ่มสัตว์เลี้ยง",
+    helpText: "Add Livestock",
+    href: "/animals/create",
     description: "จัดการข้อมูลสัตว์เลี้ยง",
   },
   {

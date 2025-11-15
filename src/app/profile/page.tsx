@@ -252,7 +252,7 @@ export default function ProfilePage() {
           </div>
 
           {/* Add Animal Button - FAB */}
-          <div className="flex justify-center mb-6">
+          {/* <div className="flex justify-center mb-6">
             <Link href="/animals/create">
               <button 
                 className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md min-h-[48px]"
@@ -262,7 +262,7 @@ export default function ProfilePage() {
                 เพิ่มข้อมูลกระบือ
               </button>
             </Link>
-          </div>
+          </div> */}
 
           {/* Menu Grid Section */}
           <div className="flex justify-center">

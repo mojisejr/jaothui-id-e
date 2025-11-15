@@ -241,13 +241,6 @@ export default function CreateAnimalPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       <main className="pt-8 pb-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto space-y-6">
-          {/* Page Title Card */}
-          <Card className="border-border bg-card/80 backdrop-blur-sm shadow-lg">
-            <CardHeader className="text-center">
-              <CardTitle className="text-2xl">เพิ่มข้อมูลลูกระบือในระบบ</CardTitle>
-              <CardDescription>โปรดกรอกข้อมูลให้ครบถ้วน</CardDescription>
-            </CardHeader>
-          </Card>
 
           {/* Form Component */}
           <CreateAnimalForm
