@@ -31,6 +31,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -247,6 +249,19 @@ export default function ProfilePage() {
                 className="w-full max-w-md"
               />
             ) : null}
+          </div>
+
+          {/* Add Animal Button - FAB */}
+          <div className="flex justify-center mb-6">
+            <Link href="/animals/create">
+              <button 
+                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md min-h-[48px]"
+                aria-label="เพิ่มข้อมูลกระบือใหม่"
+              >
+                <Plus className="w-5 h-5" />
+                เพิ่มข้อมูลกระบือ
+              </button>
+            </Link>
           </div>
 
           {/* Menu Grid Section */}
