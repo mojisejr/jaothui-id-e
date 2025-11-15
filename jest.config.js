@@ -22,6 +22,9 @@ const customJestConfig = {
   testMatch: [
     '<rootDir>/src/__tests__/**/*.test.{js,jsx,ts,tsx}',
   ],
+  transformIgnorePatterns: [
+    'node_modules/(?!(better-auth|jose|@better-auth|@auth)/)',
+  ],
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
