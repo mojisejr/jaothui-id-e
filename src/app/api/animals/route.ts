@@ -36,6 +36,122 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
+ * GET /api/animals - Retrieve Paginated Animals List
+ *
+ * Returns a paginated list of the authenticated user's animals.
+ * Supports cursor pagination, search functionality, and status filtering.
+ *
+ * Query Parameters:
+ * - cursor: ISO timestamp for pagination cursor (optional)
+ * - search: Search term for tagId and name fields (optional)
+ * - status: AnimalStatus enum value for filtering (optional)
+ *
+ * @returns { animals: Animal[], nextCursor: string | null, hasMore: boolean, pendingActivitiesCount: number }
+ * @status 200 | 401 | 404 | 500
+ */
+export async function GET(request: NextRequest) {
+  try {
+    // Authenticate user using existing codebase pattern
+    const session = await auth.api.getSession({ headers: await headers() });
+
+    if (!session?.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Extract query parameters
+    const { searchParams } = new URL(request.url);
+    const cursor = searchParams.get('cursor');
+    const search = searchParams.get('search');
+    const status = searchParams.get('status');
+
+    // Validate cursor format if provided
+    let cursorDate: Date | undefined;
+    if (cursor) {
+      cursorDate = new Date(cursor);
+      if (isNaN(cursorDate.getTime())) {
+        return NextResponse.json({ error: "Invalid cursor format" }, { status: 400 });
+      }
+    }
+
+    // Validate status if provided
+    if (status) {
+      const validStatuses = ['ACTIVE', 'TRANSFERRED', 'DECEASED', 'SOLD'];
+      if (!validStatuses.includes(status)) {
+        return NextResponse.json({
+          error: "Invalid status value. Must be one of: " + validStatuses.join(', ')
+        }, { status: 400 });
+      }
+    }
+
+    // Find user's farm using existing Prisma pattern
+    const farm = await prisma.farm.findFirst({
+      where: { ownerId: session.user.id },
+    });
+
+    if (!farm) {
+      return NextResponse.json({ error: "Farm not found" }, { status: 404 });
+    }
+
+    // Build where clause for animal query
+    const whereClause: any = {
+      farmId: farm.id,
+    };
+
+    // Add search functionality for tagId and name fields
+    if (search && search.trim()) {
+      whereClause.OR = [
+        { tagId: { contains: search.trim(), mode: 'insensitive' } },
+        { name: { contains: search.trim(), mode: 'insensitive' } }
+      ];
+    }
+
+    // Add status filtering
+    if (status) {
+      whereClause.status = status;
+    }
+
+    // Query animals with cursor pagination using createdAt as filter
+    const animals = await prisma.animal.findMany({
+      where: {
+        ...whereClause,
+        ...(cursorDate && { createdAt: { lt: cursorDate } }),
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 21, // Fetch one extra to determine if there are more records
+    });
+
+    // Determine if there are more records
+    const hasMore = animals.length > 20;
+    if (hasMore) {
+      animals.pop(); // Remove the extra record used to check for more data
+    }
+
+    // Get the cursor for the next page (timestamp of the last record)
+    const nextCursor = animals.length > 0
+      ? animals[animals.length - 1].createdAt.toISOString()
+      : null;
+
+    // Count pending activities for TopNavigation notifications
+    const pendingActivitiesCount = await prisma.activity.count({
+      where: {
+        farmId: farm.id,
+        status: 'PENDING',
+      },
+    });
+
+    return NextResponse.json({
+      animals,
+      nextCursor,
+      hasMore,
+      pendingActivitiesCount,
+    });
+  } catch (error) {
+    console.error("Animals GET error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+/**
  * POST /api/animals - Create New Animal
  *
  * Creates a new animal record for the authenticated user's farm.
