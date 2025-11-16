@@ -180,7 +180,7 @@ export default function CreateAnimalPage() {
   if (farmError) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
-        <Card className="border-border bg-card/80 backdrop-blur-sm shadow-lg max-w-md w-full">
+        <Card className="border-border bg-card/80 backdrop-blur-sm shadow-xs max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-destructive">เกิดข้อผิดพลาด</CardTitle>
             <CardDescription>{farmError}</CardDescription>
@@ -213,7 +213,7 @@ export default function CreateAnimalPage() {
   if (!farmId) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
-        <Card className="border-border bg-card/80 backdrop-blur-sm shadow-lg max-w-md w-full">
+        <Card className="border-border bg-card/80 backdrop-blur-sm shadow-xs max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-destructive">ไม่พบฟาร์ม</CardTitle>
             <CardDescription>
