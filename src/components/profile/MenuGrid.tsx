@@ -230,7 +230,7 @@ export function MenuGridItem({ item }: { item: MenuItem }): React.ReactElement {
         "p-3 rounded-xl",
         // Background and border
         "bg-card border border-border",
-        "shadow-sm hover:shadow-md",
+        "shadow-xs hover:shadow-xs",
         // Interactive states
         "transition-all duration-200",
         "hover:bg-accent hover:border-accent-foreground/20",

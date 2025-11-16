@@ -1,27 +1,25 @@
 /**
  * Animal Detail Page - Jaothui ID-Trace System
  *
- * Enhanced server-side rendered page displaying comprehensive animal information.
- * Uses AnimalDetailCard component based on ProfileCard glassmorphic design pattern.
+ * Mobile-first server-side rendered page displaying animal information.
+ * Uses AnimalDetailCard component with TopNavigation integration.
  *
  * Features:
  * - Server-side data fetching for optimal performance
- * - Enhanced glassmorphic card design (bg-card/85 backdrop-blur-md)
- * - 160x160px animal image with improved loading states
- * - 100% database field utilization with three-column responsive layout
- * - Thai language translations for all enum fields
+ * - TopNavigation integration (replaces old header)
+ * - Single column vertical layout matching actual design
+ * - Full-page component (no external background wrapper)
+ * - Notification count from due/overdue activities
+ * - Thai language translations for all fields
  * - Thai Buddhist Era (BE) calendar dates
- * - Enhanced touch targets (48px minimum)
- * - Improved error handling and loading states
  * - Mobile-first responsive design
  * - Accessibility compliant (WCAG 2.1 AA)
  *
  * Design Specifications:
- * - Card: Enhanced glassmorphic with backdrop-blur-md
- * - Image: 160x160px rounded-xl with blur placeholder
- * - Layout: Three-column responsive grid (grid-cols-1 md:grid-cols-2)
- * - Touch targets: 48px minimum for buttons
- * - Background: Enhanced gradient (from-background via-secondary/10 to-secondary/20)
+ * - Layout: Single column vertical list (no grid)
+ * - Card: Glassmorphic white card with subtle shadow
+ * - Fields: Icon + Bold label + Light subtitle pattern
+ * - Background: Clean gradient handled by component
  *
  * @route /animals/[id]
  * @component AnimalDetailPage
@@ -40,12 +38,10 @@ import AnimalDetailCard, { type Animal } from "@/components/animals/AnimalDetail
  */
 function AnimalDetailSkeleton() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/10 to-secondary/20">
-      <div className="pt-30 px-4 py-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center">
-            <div className="w-full max-w-md h-96 bg-muted/30 rounded-xl animate-pulse" />
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-surface">
+      <div className="pt-20 pb-8 px-4">
+        <div className="max-w-md mx-auto space-y-6">
+          <div className="w-full h-96 bg-muted/30 rounded-xl animate-pulse" />
         </div>
       </div>
     </div>
@@ -57,14 +53,12 @@ function AnimalDetailSkeleton() {
  */
 function AnimalDetailError({ error }: { error: string }) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/10 to-secondary/20">
-      <div className="pt-30 px-4 py-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center">
-            <div className="w-full max-w-md bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
-              <h2 className="text-lg font-semibold text-destructive mb-2">เกิดข้อผิดพลาด</h2>
-              <p className="text-muted-foreground">{error}</p>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-background to-surface">
+      <div className="pt-20 pb-8 px-4">
+        <div className="max-w-md mx-auto">
+          <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-6 text-center">
+            <h2 className="text-lg font-semibold text-destructive mb-2">เกิดข้อผิดพลาด</h2>
+            <p className="text-muted-foreground">{error}</p>
           </div>
         </div>
       </div>
@@ -129,22 +123,38 @@ export default async function AnimalPage({ params }: AnimalPageProps) {
       );
     }
 
-    // Step 5: Render page with animal data
+    // Step 5: Fetch notification count (due/overdue activities)
+    const today = new Date();
+    const notificationCount = await prisma.activity.count({
+      where: {
+        farmId: userFarm.id,
+        status: {
+          in: ['PENDING', 'OVERDUE']
+        },
+        OR: [
+          {
+            dueDate: {
+              lte: today
+            }
+          },
+          {
+            activityDate: {
+              lte: today
+            },
+            dueDate: null
+          }
+        ]
+      }
+    });
+
+    // Step 6: Render page with animal data (component handles its own background)
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary/10 to-secondary/20 transition-colors duration-300">
-        <div className="pt-30 px-4 py-6">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex justify-center">
-              <Suspense fallback={<AnimalDetailSkeleton />}>
-                <AnimalDetailCard 
-                  animal={animal} 
-                  className="w-full max-w-md"
-                />
-              </Suspense>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Suspense fallback={<AnimalDetailSkeleton />}>
+        <AnimalDetailCard 
+          animal={animal}
+          notificationCount={notificationCount}
+        />
+      </Suspense>
     );
   } catch (error) {
     console.error("Animal page error:", error);

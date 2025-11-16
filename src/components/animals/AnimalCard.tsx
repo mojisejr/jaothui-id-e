@@ -93,7 +93,7 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
 
   return (
     <Card
-      className="w-full border-border hover:shadow-sm transition-all cursor-pointer bg-card/80 backdrop-blur-xs"
+      className="w-full border-border hover:shadow-xs transition-all cursor-pointer bg-card/80 backdrop-blur-xs"
       onClick={handleCardClick}
     >
       <CardContent className="p-3">

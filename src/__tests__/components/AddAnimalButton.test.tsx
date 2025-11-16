@@ -12,7 +12,7 @@ describe('Add Animal Button', () => {
       <div className="flex justify-center mb-6">
         <Link href="/animals/create">
           <button 
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md min-h-[48px]"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-xs min-h-[48px]"
             aria-label="เพิ่มข้อมูลกระบือใหม่"
           >
             <Plus className="w-5 h-5" />
@@ -31,7 +31,7 @@ describe('Add Animal Button', () => {
       <div className="flex justify-center mb-6">
         <Link href="/animals/create">
           <button 
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md min-h-[48px]"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-xs min-h-[48px]"
             aria-label="เพิ่มข้อมูลกระบือใหม่"
           >
             <Plus className="w-5 h-5" />
@@ -50,7 +50,7 @@ describe('Add Animal Button', () => {
       <div className="flex justify-center mb-6">
         <Link href="/animals/create">
           <button 
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md min-h-[48px]"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-xs min-h-[48px]"
             aria-label="เพิ่มข้อมูลกระบือใหม่"
           >
             <Plus className="w-5 h-5" />
@@ -69,7 +69,7 @@ describe('Add Animal Button', () => {
       <div className="flex justify-center mb-6">
         <Link href="/animals/create">
           <button 
-            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-md min-h-[48px]"
+            className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors shadow-xs min-h-[48px]"
             aria-label="เพิ่มข้อมูลกระบือใหม่"
           >
             <Plus className="w-5 h-5" />
