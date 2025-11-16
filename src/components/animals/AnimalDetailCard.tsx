@@ -256,7 +256,7 @@ export function AnimalDetailCard({
 
               {/* Update Button - Inside Card */}
               <div className="pt-2">
-                <Link href={`/animals/${animal.id}/edit`} className="block">
+                <Link href={`/animals/${animal.id}/panel`} className="block">
                   <Button 
                     className="w-full min-h-[48px] bg-primary hover:bg-primary/90 text-primary-foreground font-medium"
                     aria-label="อัปเดทข้อมูลกระบือ"
