@@ -164,10 +164,10 @@ export function MenuGrid({
               "p-3 rounded-xl",
               // Background and border
               "bg-card border border-border",
-              "hover:shadow",
+              "hover:shadow-xs",
               // Interactive states
               "transition-all duration-200",
-              "hover:bg-accent hover:border-accent-foreground/20",
+              "hover: hover:border-accent-foreground/20",
               "focus-visible:outline-hidden focus-visible:ring-2",
               "focus-visible:ring-ring focus-visible:ring-offset-2",
               // Active/pressed state
