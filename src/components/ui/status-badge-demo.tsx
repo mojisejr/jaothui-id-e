@@ -130,7 +130,7 @@ export default function StatusBadgeDemo() {
       <section className="bg-white p-6 rounded-lg shadow">
         <h2 className="text-xl font-semibold mb-4">Accessibility Features</h2>
         <ul className="list-disc list-inside space-y-2 text-sm text-gray-700">
-          <li>ARIA role="status" for semantic meaning</li>
+          <li>ARIA role=&quot;status&quot; for semantic meaning</li>
           <li>ARIA labels in Thai for screen reader support</li>
           <li>Icons marked as aria-hidden to avoid duplication</li>
           <li>High contrast colors for elderly users</li>
