@@ -144,6 +144,85 @@ export const animalSchema = z.object({
 export const createAnimalFormSchema = animalSchema.omit({ farmId: true });
 
 /**
+ * Update Animal Schema
+ * Used for updating existing animal records (PUT /api/animals/[id])
+ * 
+ * Editable Fields:
+ * - name, color, weightKg, heightCm, motherTag, fatherTag, genome
+ * 
+ * Read-Only Fields (cannot be updated after creation):
+ * - tagId, type, gender, birthDate, status, farmId
+ */
+export const updateAnimalSchema = z.object({
+  /**
+   * Animal Name - Friendly name for the animal
+   * Optional, can be null
+   */
+  name: z
+    .string()
+    .max(255, "ชื่อกระบือต้องไม่เกิน 255 ตัวอักษร")
+    .optional()
+    .nullable(),
+
+  /**
+   * Color - Physical description of the animal's color
+   * Free text field, optional
+   */
+  color: z
+    .string()
+    .max(255, "สีต้องไม่เกิน 255 ตัวอักษร")
+    .optional()
+    .nullable(),
+
+  /**
+   * Weight in Kilograms - Must be positive number
+   * Stored as Decimal(8,2) in database
+   */
+  weightKg: z
+    .number({ message: "น้ำหนักต้องเป็นตัวเลข" })
+    .positive("น้ำหนักต้องมากกว่า 0")
+    .optional()
+    .nullable(),
+
+  /**
+   * Height in Centimeters - Must be positive integer
+   * Stored as Int in database
+   */
+  heightCm: z
+    .number({ message: "ส่วนสูงต้องเป็นตัวเลข" })
+    .int("ส่วนสูงต้องเป็นจำนวนเต็ม")
+    .positive("ส่วนสูงต้องมากกว่า 0")
+    .optional()
+    .nullable(),
+
+  /**
+   * Mother's Tag ID - Reference to mother animal
+   * Should match another animal's tagId in the same farm
+   */
+  motherTag: z
+    .string()
+    .max(255, "หมายเลขแม่ต้องไม่เกิน 255 ตัวอักษร")
+    .optional()
+    .nullable(),
+
+  /**
+   * Father's Tag ID - Reference to father animal
+   * Should match another animal's tagId in the same farm
+   */
+  fatherTag: z
+    .string()
+    .max(255, "หมายเลขพ่อต้องไม่เกิน 255 ตัวอักษร")
+    .optional()
+    .nullable(),
+
+  /**
+   * Genome Information - Genetic data or notes
+   * Free text field for any genetic information
+   */
+  genome: z.string().optional().nullable(),
+});
+
+/**
  * TypeScript type inferred from the complete animal schema
  * Use this for API endpoints and database operations
  */
@@ -154,6 +233,12 @@ export type AnimalInput = z.infer<typeof animalSchema>;
  * Use this for frontend forms where farmId comes from context
  */
 export type CreateAnimalFormInput = z.infer<typeof createAnimalFormSchema>;
+
+/**
+ * TypeScript type for update form inputs
+ * Use this for EditAnimalForm component
+ */
+export type UpdateAnimalFormInput = z.infer<typeof updateAnimalSchema>;
 
 /**
  * Example Usage:
