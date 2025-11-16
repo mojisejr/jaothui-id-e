@@ -422,8 +422,8 @@ export default function AnimalListTabsPage() {
                             animal={animal}
                             notificationCount={Math.floor(Math.random() * 3)} // Mock notification count
                             onPress={() => {
-                              // Future: Navigate to animal details page
-                              console.log('Animal clicked:', animal.tagId);
+                              // Navigate to animal details page
+                              router.push(`/animals/${animal.id}`);
                             }}
                           />
                         </div>
