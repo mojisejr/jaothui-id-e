@@ -150,11 +150,39 @@ export default async function AnimalPanelPage({ params }: AnimalPanelPageProps) 
       }
     });
 
-    // Step 6: Render page with animal data (client component handles tabs and content)
+    // Step 6: Fetch activities for this animal
+    const activities = await prisma.activity.findMany({
+      where: {
+        animalId: id,
+        farmId: userFarm.id,
+      },
+      include: {
+        creator: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+        completer: {
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+          },
+        },
+      },
+      orderBy: {
+        activityDate: 'desc',
+      },
+    });
+
+    // Step 7: Render page with animal data and activities (client component handles tabs and content)
     return (
       <Suspense fallback={<AnimalPanelSkeleton />}>
         <AnimalPanelContent 
           animal={animal}
+          activities={activities}
           notificationCount={notificationCount}
         />
       </Suspense>
