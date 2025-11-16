@@ -80,12 +80,12 @@ export const defaultMenuItems: MenuItem[] = [
     description: "กระบือทั้งหมดในฟาร์มของคุณ",
   },
   {
-    id: "treatments",
-    icon: "💉",
-    label: "การรักษา",
-    helpText: "Treatments",
-    href: "/treatments",
-    description: "บันทึกการรักษาและประวัติทางการแพทย์",
+    id: "staff",
+    icon: "👥",
+    label: "เพิ่มพนักงาน",
+    helpText: "Add Staff",
+    href: "/staff/create",
+    description: "เพิ่มพนักงานในฟาร์ม",
   },
   {
     id: "feeding",
