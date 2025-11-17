@@ -15,6 +15,48 @@ import { z } from "zod";
  */
 
 /**
+ * Input Sanitization Utilities
+ * Prevents "string pattern does not match" errors by cleaning user input
+ */
+
+/**
+ * Sanitizes username input by:
+ * - Removing leading/trailing whitespace
+ * - Removing zero-width characters (IME artifacts, zero-width spaces)
+ * - Converting to ASCII-safe characters only
+ */
+export function sanitizeUsername(input: string | null | undefined): string {
+  if (!input) return "";
+  
+  return input
+    .trim()
+    // Remove zero-width characters common in IME and copy-paste
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    // Remove any non-ASCII printable characters
+    .replace(/[^\x20-\x7E]/g, '')
+    .trim();
+}
+
+/**
+ * Sanitizes email input by:
+ * - Removing leading/trailing whitespace
+ * - Converting blank/whitespace-only strings to null
+ * - Removing zero-width characters
+ */
+export function sanitizeEmail(input: string | null | undefined): string | null {
+  if (!input) return null;
+  
+  const cleaned = input
+    .trim()
+    // Remove zero-width characters
+    .replace(/[\u200B-\u200D\uFEFF]/g, '')
+    .trim();
+  
+  // Convert empty string to null
+  return cleaned === '' ? null : cleaned;
+}
+
+/**
  * Staff Creation Schema
  * Used for creating new staff accounts
  */
@@ -22,14 +64,21 @@ export const staffSchema = z.object({
   /**
    * Username - Unique identifier for staff login
    * Must be unique across all users (enforced at database level)
+   * Only allows: a-z, A-Z, 0-9, hyphen (-), and underscore (_)
    */
   username: z
     .string({ message: "ชื่อผู้ใช้ต้องระบุ" })
-    .min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร")
-    .max(50, "ชื่อผู้ใช้ต้องไม่เกิน 50 ตัวอักษร")
-    .regex(
-      /^[a-zA-Z0-9_-]+$/,
-      "ชื่อผู้ใช้ต้องเป็นตัวอักษรภาษาอังกฤษ ตัวเลข - หรือ _ เท่านั้น"
+    .min(1, "ชื่อผู้ใช้ต้องระบุ")
+    .transform(sanitizeUsername)
+    .pipe(
+      z
+        .string()
+        .min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร")
+        .max(50, "ชื่อผู้ใช้ต้องไม่เกิน 50 ตัวอักษร")
+        .regex(
+          /^[a-zA-Z0-9_-]+$/,
+          "อนุญาตเฉพาะ a-z, A-Z, 0-9, -, _ เท่านั้น"
+        )
     ),
 
   /**
@@ -48,7 +97,8 @@ export const staffSchema = z.object({
   firstName: z
     .string({ message: "ชื่อต้องระบุ" })
     .min(1, "ชื่อต้องระบุ")
-    .max(255, "ชื่อต้องไม่เกิน 255 ตัวอักษร"),
+    .max(255, "ชื่อต้องไม่เกิน 255 ตัวอักษร")
+    .transform((val) => val.trim()),
 
   /**
    * Last Name - Staff member's last name
@@ -57,17 +107,29 @@ export const staffSchema = z.object({
   lastName: z
     .string({ message: "นามสกุลต้องระบุ" })
     .min(1, "นามสกุลต้องระบุ")
-    .max(255, "นามสกุลต้องไม่เกิน 255 ตัวอักษร"),
+    .max(255, "นามสกุลต้องไม่เกิน 255 ตัวอักษร")
+    .transform((val) => val.trim()),
 
   /**
    * Email - Optional email for staff account
    * Valid email format required if provided
+   * Blank or whitespace-only input is converted to null
    */
   email: z
     .string()
-    .email("รูปแบบอีเมลไม่ถูกต้อง")
-    .optional()
-    .nullable(),
+    .transform(sanitizeEmail)
+    .nullable()
+    .refine(
+      (val) => {
+        // If null or empty, it's valid (optional field)
+        if (val === null || val === '') return true;
+        // Otherwise, must be valid email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(val);
+      },
+      { message: "รูปแบบอีเมลไม่ถูกต้อง" }
+    )
+    .optional(),
 });
 
 /**
