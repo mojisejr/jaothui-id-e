@@ -78,8 +78,8 @@ export default function LoginPage() {
       }
 
       // Sign in with username and password
-      const result = await authClient.signIn.email({
-        email: formData.username, // better-auth maps this to username field
+      const result = await authClient.signIn.username({
+        username: formData.username,
         password: formData.password,
         callbackURL: "/",
       });

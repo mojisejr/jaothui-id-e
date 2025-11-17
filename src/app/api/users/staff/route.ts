@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
     // Step 6: Hash password
     const passwordHash = await bcrypt.hash(validatedData.password, 10);
 
-    // Step 7: Create user and membership in a transaction
+    // Step 7: Create user, account, and membership in a transaction
     const result = await prisma.$transaction(async (tx) => {
       // Create user with sanitized email
       const user = await tx.user.create({
@@ -273,6 +273,17 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Create better-auth Account record for credential authentication
+      const account = await tx.account.create({
+        data: {
+          accountId: user.id,
+          providerId: "credential",
+          userId: user.id,
+          // Store the hashed password in the account record for better-auth compatibility
+          password: passwordHash,
+        },
+      });
+
       // Create farm membership
       const membership = await tx.farmMember.create({
         data: {
@@ -282,7 +293,7 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      return { user, membership };
+      return { user, account, membership };
     });
 
     // Step 8: Return success response

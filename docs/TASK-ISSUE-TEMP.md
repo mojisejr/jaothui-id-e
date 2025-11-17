@@ -166,8 +166,8 @@ ALTER POLICY ...;
 - **No Task Dependencies**: This task must be executable independently
 - **Reference Materials**: [relevant documentation links]
 
-**Assign to**: [@human-executor | @copilot] (based on mode)
-**Labels**: `atomic`, `[technology]`, `independent-execution`, `[manual|copilot]`
+**Assign to**: [manual assignment as needed]
+**Labels**: [no labels - clean issue creation]
 ```
 
 ---
@@ -315,8 +315,8 @@ CREATE POLICY "Users can update own profile"
 - **Context Issue**: #[ISSUE-008] (for reference only)
 - **No Task Dependencies**: This task must be executable independently
 
-**Assign to: @copilot**
-**Labels**: `atomic`, `database`, `schema`, `independent-execution`, `copilot`
+**Assign to**: [manual assignment as needed]
+**Labels**: [no labels - clean issue creation]
 ```
 
 ### Example 2: React Component Creation (Manual Mode)
@@ -386,8 +386,8 @@ components/ui/loading-spinner.test.tsx
 - **Context Issue**: #[ISSUE-008] (for reference only)
 - **No Task Dependencies**: This task must be executable independently
 
-**Assign to: [assignee]
-**Labels**: `atomic`, `component`, `ui`, `independent-execution`, `manual`
+**Assign to**: [manual assignment as needed]
+**Labels**: [no labels - clean issue creation]
 ```
 
 ---
@@ -474,15 +474,12 @@ components/ui/loading-spinner.test.tsx
 gh issue create \
   --title "[TASK-XXX-X] Atomic: [Single Deliverable]" \
   --body "$(cat docs/ISSUE-TEMP.md | sed -n '/## \[TASK-XXX-X\] Atomic:/,/```/p')" \
-  --assignee @copilot \
-  --label "atomic" \
-  --label "independent-execution"
-
+  
 # Monitor atomic task progress
-gh issue list --assignee @copilot --label "atomic" --state open
+gh issue list --state open
 
 # Review atomic task PR
-gh pr list --author @copilot --label "atomic"
+gh pr list
 ```
 
 ---
