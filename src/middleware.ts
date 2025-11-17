@@ -75,29 +75,7 @@ const OAUTH_CALLBACK_PATHS = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Handle API preflight (OPTIONS) requests so browsers do not fail with 405
-  // MUST be checked BEFORE the early return for /api/* routes below, otherwise
-  // OPTIONS requests will be skipped and Next.js will return 405 for missing handlers.
-  // If an API route doesn't implement OPTIONS, Next.js returns 405. Handle
-  // preflight globally to add CORS headers for /api/* routes.
-  if (pathname.startsWith("/api") && request.method === "OPTIONS") {
-    try {
-      const origin = request.headers.get("origin") || "*";
-      const headers = new Headers({
-        "Access-Control-Allow-Origin": origin,
-        "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        "Access-Control-Allow-Credentials": "true",
-      });
-
-      return new NextResponse(null, { status: 204, headers });
-    } catch (err) {
-      console.error("Error handling API OPTIONS request:", err);
-      // If handling fails, continue to next to allow the API route to run and return
-      // its own response (possibly a 405), but avoid blocking other behavior.
-    }
-  }
-
+  
   // Skip middleware for Next.js internal routes, API routes (except handled OPTIONS), and static files
   if (
     pathname.startsWith("/_next") ||
