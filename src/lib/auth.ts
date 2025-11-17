@@ -40,7 +40,7 @@ export const auth = betterAuth({
   /**
    * Email and Password Authentication
    * Used for farm staff members
-   * Argon2 is used by default for password hashing
+   * bcrypt is used for password hashing (Vercel compatible)
    * Email verification disabled since we use username authentication
    */
   emailAndPassword: {
@@ -48,6 +48,16 @@ export const auth = betterAuth({
     requireEmailVerification: false,
     minPasswordLength: 8,
     maxPasswordLength: 128,
+    password: {
+      hash: async (password) => {
+        const bcrypt = await import("bcryptjs");
+        return await bcrypt.hash(password, 10);
+      },
+      verify: async ({ hash, password }) => {
+        const bcrypt = await import("bcryptjs");
+        return await bcrypt.compare(password, hash);
+      }
+    }
   },
 
   /**

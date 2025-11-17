@@ -26,7 +26,7 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import argon2 from "argon2";
+import bcrypt from "bcryptjs";
 import { staffSchema, sanitizeEmail } from "@/lib/validations/staff";
 
 /**
@@ -248,12 +248,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 6: Hash password
-    const passwordHash = await argon2.hash(validatedData.password, {
-      type: argon2.argon2id,
-      memoryCost: 19456,
-      timeCost: 2,
-      parallelism: 1,
-    });
+    const passwordHash = await bcrypt.hash(validatedData.password, 10);
 
     // Step 7: Create user and membership in a transaction
     const result = await prisma.$transaction(async (tx) => {
