@@ -336,3 +336,35 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+/**
+ * OPTIONS /api/users/staff - Preflight CORS handler
+ *
+ * Provide supported methods and CORS headers for preflight checks when
+ * client makes cross-origin requests with Content-Type: application/json.
+ * Browsers send an OPTIONS request in these cases; by default Next.js
+ * does not handle OPTIONS, and returns 405. That causes the empty body and
+ * client-side JSON parse error. Mitigate by responding to OPTIONS here.
+ */
+export async function OPTIONS(request: NextRequest) {
+  try {
+    // Allow origin specified in request or fallback to wildcard. Be cautious
+    // with wildcard if credentials (cookies) are used; you may need to echo
+    // back request origin and set Access-Control-Allow-Credentials accordingly.
+    const origin = request.headers.get("origin") || "*";
+
+    const headers: Record<string, string> = {
+      "Access-Control-Allow-Origin": origin,
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      // Allow cookies if the application uses credentials and the origin is explicit
+      "Access-Control-Allow-Credentials": "true",
+      "Vary": "Origin",
+    };
+
+    return NextResponse.json(null, { status: 204, headers });
+  } catch (error) {
+    console.error("Users/staff OPTIONS error:", error);
+    return NextResponse.json({ success: false, error: { code: "INTERNAL_ERROR", message: "เกิดข้อผิดพลาด" } }, { status: 500 });
+  }
+}
