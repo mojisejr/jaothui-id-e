@@ -96,23 +96,35 @@ export function CreateStaffForm({
         headers: {
           "Content-Type": "application/json",
         },
+        // Ensure cookies (session) are sent for same-origin or cross-origin requests
+        // when the server expects a session cookie (e.g., better-auth). For cross-origin
+        // requests, the server must also allow credentials in CORS response headers.
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error?.message || "ไม่สามารถเพิ่มพนักงานได้"
-        );
+        // Defensive handling for empty error responses (e.g., 405 with empty body)
+        const text = await response.text();
+        let errorData: any = null;
+        try {
+          errorData = text ? JSON.parse(text) : null;
+        } catch (parseErr) {
+          // If parsing fails, leave errorData null and use fallback message
+          console.warn("Failed to parse error JSON from users/staff API: ", parseErr);
+        }
+
+        throw new Error(errorData?.error?.message || "ไม่สามารถเพิ่มพนักงานได้");
       }
 
-      const result = await response.json();
+      const text = await response.text();
+      const result = text ? JSON.parse(text) : null;
 
       // Reset form on success
       reset();
 
       // Call success callback
-      onSuccess?.(result.data);
+  onSuccess?.(result?.data);
     } catch (err) {
       console.error("Staff creation error:", err);
       setError(
