@@ -1,6 +1,7 @@
 import { betterAuth } from "better-auth";
 import { createAuthMiddleware } from "better-auth/api";
 import { prismaAdapter } from "better-auth/adapters/prisma";
+import { username } from "better-auth/plugins";
 import { prisma } from "@/lib/prisma";
 
 /**
@@ -16,6 +17,20 @@ import { prisma } from "@/lib/prisma";
  * - PostgreSQL database via Supabase with Prisma ORM
  */
 export const auth = betterAuth({
+  /**
+   * Plugins Configuration
+   * Add username plugin for proper username-based authentication
+   */
+  plugins: [
+    username({
+      minUsernameLength: 3,
+      usernameValidator: (username) => {
+        // Allow alphanumeric characters, underscores, and hyphens
+        return /^[a-zA-Z0-9_-]+$/.test(username);
+      }
+    })
+  ],
+
   /**
    * Database Configuration
    * Using Prisma adapter for persistent PostgreSQL storage via Supabase

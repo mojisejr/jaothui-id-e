@@ -6,7 +6,7 @@
 - **#51**: Database Integration - LINE Login with Supabase - [Ready for Planning] - https://github.com/mojisejr/jaothui-id-e/issues/51
 - **#71**: Single Farm MVP Design - [Planning] - https://github.com/mojisejr/jaothui-id-e/issues/71
 - **#183**: Replace argon2 with bcryptjs for Vercel compatibility - [Ready for Planning] - https://github.com/mojisejr/jaothui-id-e/issues/183
-- **#188**: Animal Search Feature Implementation - [Planning] - https://github.com/mojisejr/jaothui-id-e/issues/188
+- **#188**: Animal Search Feature Implementation - [Ready for Planning] - https://github.com/mojisejr/jaothui-id-e/issues/188
 
 ## Context Status Flow
 1. **Created** - Initial context issue created

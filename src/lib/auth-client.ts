@@ -12,12 +12,14 @@
  */
 
 import { createAuthClient } from "better-auth/react";
+import { usernameClient } from "better-auth/client/plugins";
 
 /**
  * Better Auth Client Instance
- * 
+ *
  * This client provides methods for authentication operations:
  * - signIn.social({ provider: "line" }) - LINE OAuth login
+ * - signIn.username({ username, password }) - Username/password login
  * - signIn.email({ email, password }) - Email/password login
  * - signUp.email({ email, password, name }) - Registration
  * - signOut() - Sign out current session
@@ -25,11 +27,19 @@ import { createAuthClient } from "better-auth/react";
  */
 export const authClient = createAuthClient({
   /**
+   * Plugins Configuration
+   * Add username client plugin for username-based authentication
+   */
+  plugins: [
+    usernameClient()
+  ],
+
+  /**
    * Base URL for authentication API
    * Uses relative path in browser, absolute URL in server-side rendering
    */
-  baseURL: typeof window !== "undefined" 
-    ? window.location.origin 
+  baseURL: typeof window !== "undefined"
+    ? window.location.origin
     : process.env.BETTER_AUTH_URL || "http://localhost:3000",
 });
 
