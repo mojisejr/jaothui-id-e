@@ -27,6 +27,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import argon2 from "argon2";
+import { staffSchema, sanitizeEmail } from "@/lib/validations/staff";
 
 /**
  * Required Next.js configuration for API routes
@@ -205,14 +206,7 @@ export async function POST(request: NextRequest) {
     // Step 2: Parse request body
     const body = await request.json();
 
-    // Step 3: Validate input
-    const staffSchema = z.object({
-      username: z.string().min(3, "ชื่อผู้ใช้ต้องมีอย่างน้อย 3 ตัวอักษร").max(50),
-      password: z.string().min(6, "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร"),
-      firstName: z.string().min(1, "ชื่อต้องระบุ").max(255),
-      lastName: z.string().min(1, "นามสกุลต้องระบุ").max(255),
-    });
-
+    // Step 3: Validate input using shared staffSchema
     const validatedData = staffSchema.parse(body);
 
     // Step 4: Verify user is farm owner
@@ -263,19 +257,22 @@ export async function POST(request: NextRequest) {
 
     // Step 7: Create user and membership in a transaction
     const result = await prisma.$transaction(async (tx) => {
-      // Create user
+      // Create user with sanitized email
       const user = await tx.user.create({
         data: {
           username: validatedData.username,
           passwordHash,
           firstName: validatedData.firstName,
           lastName: validatedData.lastName,
+          // Ensure email is null if not provided
+          email: sanitizeEmail(validatedData.email),
         },
         select: {
           id: true,
           username: true,
           firstName: true,
           lastName: true,
+          email: true,
           createdAt: true,
           updatedAt: true,
         },
