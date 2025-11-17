@@ -76,6 +76,8 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Handle API preflight (OPTIONS) requests so browsers do not fail with 405
+  // MUST be checked BEFORE the early return for /api/* routes below, otherwise
+  // OPTIONS requests will be skipped and Next.js will return 405 for missing handlers.
   // If an API route doesn't implement OPTIONS, Next.js returns 405. Handle
   // preflight globally to add CORS headers for /api/* routes.
   if (pathname.startsWith("/api") && request.method === "OPTIONS") {
