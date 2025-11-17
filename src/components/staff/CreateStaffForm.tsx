@@ -22,7 +22,7 @@
 import * as React from "react";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { staffSchema, StaffInput } from "@/lib/validations/staff";
+import { staffSchema, StaffInput, sanitizeEmail } from "@/lib/validations/staff";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -83,11 +83,11 @@ export function CreateStaffForm({
       setIsSubmitting(true);
       setError("");
 
-      // Prepare payload
+      // Prepare payload with proper email sanitization
+      // The email field is already sanitized by Zod transform, but ensure null is sent for empty
       const payload = {
         ...data,
-        // Convert empty string to null for optional email
-        email: data.email || null,
+        email: sanitizeEmail(data.email),
       };
 
       // POST to API endpoint
@@ -176,14 +176,20 @@ export function CreateStaffForm({
               <Input
                 id="username"
                 type="text"
-                placeholder="กรอกชื่อผู้ใช้ (a-z, 0-9, -, _)"
+                placeholder="ตัวอย่าง: staff_001"
                 disabled={isLoading}
                 aria-required="true"
                 aria-invalid={!!errors.username}
-                aria-describedby={errors.username ? "username-error" : undefined}
+                aria-describedby={errors.username ? "username-error username-hint" : "username-hint"}
                 className="h-12 text-base"
                 {...register("username")}
               />
+              <p 
+                id="username-hint"
+                className="text-xs text-muted-foreground"
+              >
+                อนุญาตเฉพาะ a-z, A-Z, 0-9, -, _ เท่านั้น (อย่างน้อย 3 ตัวอักษร)
+              </p>
               {errors.username && (
                 <p
                   id="username-error"
@@ -292,20 +298,27 @@ export function CreateStaffForm({
             <div className="space-y-2">
               <label
                 htmlFor="email"
-                className="text-sm font-medium text-foreground"
+                className="text-sm font-medium text-foreground flex items-center gap-2"
               >
                 อีเมล
+                <span className="text-xs text-muted-foreground font-normal">(ไม่บังคับ)</span>
               </label>
               <Input
                 id="email"
                 type="email"
-                placeholder="กรอกอีเมล (ถ้ามี)"
+                placeholder="example@email.com"
                 disabled={isLoading}
                 aria-invalid={!!errors.email}
-                aria-describedby={errors.email ? "email-error" : undefined}
+                aria-describedby={errors.email ? "email-error email-hint" : "email-hint"}
                 className="h-12 text-base"
                 {...register("email")}
               />
+              <p 
+                id="email-hint"
+                className="text-xs text-muted-foreground"
+              >
+                ไม่บังคับ - สามารถเว้นว่างไว้ได้
+              </p>
               {errors.email && (
                 <p
                   id="email-error"
