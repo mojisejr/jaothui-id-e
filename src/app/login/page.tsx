@@ -34,7 +34,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string>("");
   const [formData, setFormData] = React.useState({
-    email: "",
+    username: "",
     password: "",
   });
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
   };
 
   /**
-   * Handle Staff Login with Email/Password
+   * Handle Staff Login with Username/Password
    * For farm staff members
    */
   const handleStaffLogin = async (e: React.FormEvent) => {
@@ -71,21 +71,21 @@ export default function LoginPage() {
       setError("");
 
       // Validate inputs
-      if (!formData.email || !formData.password) {
-        setError("กรุณากรอกอีเมลและรหัสผ่าน");
+      if (!formData.username || !formData.password) {
+        setError("กรุณากรอกชื่อผู้ใช้และรหัสผ่าน");
         setIsLoading(false);
         return;
       }
 
-      // Sign in with email and password
+      // Sign in with username and password
       const result = await authClient.signIn.email({
-        email: formData.email,
+        email: formData.username, // better-auth maps this to username field
         password: formData.password,
         callbackURL: "/",
       });
 
       if (result.error) {
-        setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
+        setError("ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง");
         setIsLoading(false);
         return;
       }
@@ -209,25 +209,25 @@ export default function LoginPage() {
 
             {/* Staff Login Form */}
             <form onSubmit={handleStaffLogin} className="space-y-4">
-              {/* Email Input */}
+              {/* Username Input */}
               <div className="space-y-2">
                 <label
-                  htmlFor="email"
+                  htmlFor="username"
                   className="text-sm font-medium text-foreground"
                 >
-                  อีเมล
+                  ชื่อผู้ใช้
                 </label>
                 <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="staff@example.com"
-                  value={formData.email}
+                  id="username"
+                  name="username"
+                  type="text"
+                  placeholder="ตัวอย่าง: staff_001"
+                  value={formData.username}
                   onChange={handleInputChange}
                   disabled={isLoading}
                   required
                   aria-required="true"
-                  aria-label="อีเมล"
+                  aria-label="ชื่อผู้ใช้"
                   className="h-12 text-base"
                 />
               </div>
@@ -260,7 +260,7 @@ export default function LoginPage() {
                 type="submit"
                 disabled={isLoading}
                 className="w-full h-12 text-base font-medium"
-                aria-label="เข้าสู่ระบบด้วยอีเมลและรหัสผ่าน"
+                aria-label="เข้าสู่ระบบด้วยชื่อผู้ใช้และรหัสผ่าน"
               >
                 {isLoading ? (
                   <span className="flex items-center justify-center gap-2">
