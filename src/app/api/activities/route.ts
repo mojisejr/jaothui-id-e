@@ -26,7 +26,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { Prisma } from "@prisma/client";
 import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
 /**
@@ -398,23 +397,6 @@ export async function POST(request: NextRequest) {
         },
         { status: 400 }
       );
-    }
-
-    // Handle Prisma errors
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: "INVALID_REFERENCE",
-              message: "ข้อมูลอ้างอิงไม่ถูกต้อง",
-            },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 400 }
-        );
-      }
     }
 
     console.error("Activities POST error:", error);

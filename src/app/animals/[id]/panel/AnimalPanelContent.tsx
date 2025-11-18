@@ -35,7 +35,8 @@ import TopNavigation from "@/components/profile/TopNavigation";
 import { EditAnimalForm } from "@/components/animals/EditAnimalForm";
 import { CreateActivityForm } from "@/components/activities/CreateActivityForm";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { AnimalType, AnimalGender, AnimalStatus, ActivityStatus, Prisma } from "@prisma/client";
+import { AnimalType, AnimalGender, AnimalStatus } from "@/types/animal";
+import { ActivityStatus } from "@/types/activity";
 
 /**
  * Animal interface matching Prisma schema
@@ -50,7 +51,7 @@ export interface Animal {
   status: AnimalStatus;
   birthDate: string | Date | null;
   color: string | null;
-  weightKg: Prisma.Decimal | number | null;
+  weightKg: number | null;
   heightCm: number | null;
   motherTag: string | null;
   fatherTag: string | null;

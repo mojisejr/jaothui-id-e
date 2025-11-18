@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
-import { ActivityStatus } from "@prisma/client"
+import { ActivityStatus } from "@/types/activity"
 
 import { cn } from "@/lib/utils"
 

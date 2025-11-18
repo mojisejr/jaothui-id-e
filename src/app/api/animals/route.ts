@@ -25,7 +25,6 @@ import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { animalSchema } from "@/lib/validations/animal";
-import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
 import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
@@ -312,37 +311,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Handle Prisma database errors
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      // P2002: Unique constraint violation (duplicate tagId in farm)
-      if (error.code === "P2002") {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: "DUPLICATE_TAG",
-              message: "หมายเลขแท็กนี้มีในระบบแล้ว",
-            },
-            timestamp: new Date().toISOString(),
+    // Check for duplicate tagId error (unique constraint)
+    const errorMessage = error instanceof Error ? error.message : '';
+    if (errorMessage.includes('Unique constraint') || errorMessage.includes('duplicate key')) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "DUPLICATE_TAG",
+            message: "หมายเลขแท็กนี้มีในระบบแล้ว",
           },
-          { status: 409 }
-        );
-      }
-
-      // P2003: Foreign key constraint violation
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: "INVALID_REFERENCE",
-              message: "ข้อมูลอ้างอิงไม่ถูกต้อง",
-            },
-            timestamp: new Date().toISOString(),
-          },
-          { status: 400 }
-        );
-      }
+          timestamp: new Date().toISOString(),
+        },
+        { status: 409 }
+      );
     }
 
     // Handle JSON parsing errors
