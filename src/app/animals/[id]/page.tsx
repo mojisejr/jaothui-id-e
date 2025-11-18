@@ -31,6 +31,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 import AnimalDetailCard, { type Animal } from "@/components/animals/AnimalDetailCard";
 
 /**
@@ -112,22 +113,37 @@ export default async function AnimalPage({ params }: AnimalPageProps) {
       notFound();
     }
 
-    // Step 4: Verify user has access to this animal's farm
-    const userFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
+    // Step 4: Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      console.error("Farm context error:", error);
+      return <AnimalDetailError error="ไม่พบฟาร์มของคุณ" />;
+    }
 
-    if (!userFarm || userFarm.id !== animal.farmId) {
+    const { farm } = farmContext;
+
+    // DEBUG: Log farm ID comparison
+    console.log("DEBUG - Farm ID Comparison:");
+    console.log("- User farm ID:", farm.id);
+    console.log("- Animal farm ID:", animal.farmId);
+    console.log("- User farm name:", farm.name);
+    console.log("- Animal farm name:", animal.farm.name);
+    console.log("- Are they equal?", farm.id === animal.farmId);
+
+    // Step 5: Verify user has access to this animal's farm
+    if (farm.id !== animal.farmId) {
       return (
-        <AnimalDetailError error="คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้" />
+        <AnimalDetailError error={`คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้ (Farm ID mismatch: ${farm.id} vs ${animal.farmId})`} />
       );
     }
 
-    // Step 5: Fetch notification count (due/overdue activities)
+    // Step 6: Fetch notification count (due/overdue activities)
     const today = new Date();
     const notificationCount = await prisma.activity.count({
       where: {
-        farmId: userFarm.id,
+        farmId: farm.id,
         status: {
           in: ['PENDING', 'OVERDUE']
         },
@@ -147,7 +163,7 @@ export default async function AnimalPage({ params }: AnimalPageProps) {
       }
     });
 
-    // Step 6: Render page with animal data (component handles its own background)
+    // Step 7: Render page with animal data (component handles its own background)
     return (
       <Suspense fallback={<AnimalDetailSkeleton />}>
         <AnimalDetailCard 
