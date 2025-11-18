@@ -46,7 +46,7 @@ import { useSession, signOut } from "@/lib/auth-client";
 // Profile Components Integration
 import TopNavigation from "@/components/profile/TopNavigation";
 import { ProfileCard, Farm } from "@/components/profile/ProfileCard";
-import MenuGrid, { defaultMenuItems } from "@/components/profile/MenuGrid";
+import MenuGrid, { defaultMenuItems, type UserRole } from "@/components/profile/MenuGrid";
 import { GhostLogoutButton } from "@/components/profile/GhostLogoutButton";
 
 export default function ProfilePage() {
@@ -57,6 +57,7 @@ export default function ProfilePage() {
   const [farm, setFarm] = React.useState<Farm | null>(null);
   const [isLoadingFarm, setIsLoadingFarm] = React.useState(true);
   const [farmError, setFarmError] = React.useState<string | null>(null);
+  const [userRole, setUserRole] = React.useState<UserRole>('OWNER');
 
   /**
    * Redirect to login if not authenticated
@@ -133,6 +134,17 @@ export default function ProfilePage() {
   const handleFarmUpdate = (updatedFarm: Farm) => {
     setFarm(updatedFarm);
   };
+
+  /**
+   * Determine user role based on farm ownership
+   */
+  React.useEffect(() => {
+    if (session?.user?.id && farm) {
+      // If user owns the farm, they are OWNER, otherwise MEMBER
+      const role: UserRole = farm.ownerId === session.user.id ? 'OWNER' : 'MEMBER';
+      setUserRole(role);
+    }
+  }, [session, farm]);
 
   /**
    * Loading state while checking authentication
@@ -268,6 +280,7 @@ export default function ProfilePage() {
           <div className="flex justify-center">
             <MenuGrid
               menuItems={defaultMenuItems}
+              userRole={userRole}
               className="w-full max-w-2xl"
             />
           </div>
