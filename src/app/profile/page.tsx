@@ -48,6 +48,7 @@ import TopNavigation from "@/components/profile/TopNavigation";
 import { ProfileCard, Farm } from "@/components/profile/ProfileCard";
 import MenuGrid, { defaultMenuItems, type UserRole } from "@/components/profile/MenuGrid";
 import { GhostLogoutButton } from "@/components/profile/GhostLogoutButton";
+import AnimalSearchField from "@/components/animals/AnimalSearchField";
 
 /**
  * MenuSkeleton Component
@@ -289,6 +290,11 @@ export default function ProfilePage() {
                 className="w-full max-w-md"
               />
             ) : null}
+          </div>
+
+          {/* Animal Search Field Section */}
+          <div className="flex justify-center">
+            <AnimalSearchField className="w-full max-w-md" />
           </div>
 
           {/* Add Animal Button - FAB */}
