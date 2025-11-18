@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
 /**
  * Required Next.js configuration for API routes
@@ -60,24 +61,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Step 2: Get user's farm
-    const farm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!farm) {
+    // Step 2: Get user's farm context
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "FARM_NOT_FOUND",
-            message: "ไม่พบฟาร์มของคุณ",
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูล",
           },
           timestamp: new Date().toISOString(),
         },
-        { status: 404 }
+        { status: 500 }
       );
     }
+
+    const { farm } = farmContext;
 
     // Step 3: Count pending activities (activities that are not completed)
     const pendingCount = await prisma.activity.count({

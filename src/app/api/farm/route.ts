@@ -22,6 +22,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
 /**
  * Required Next.js configuration for API routes
@@ -48,16 +49,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Find user's farm using existing Prisma pattern
-    const farm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!farm) {
-      return NextResponse.json({ error: "Farm not found" }, { status: 404 });
+    // Get user's farm context
+    try {
+      const farmContext = await getUserFarmContext(session.user.id);
+      return NextResponse.json({ farm: farmContext.farm });
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json({ error: "No farm access" }, { status: 403 });
+      }
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
-
-    return NextResponse.json({ farm });
   } catch (error) {
     console.error("Farm GET error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
@@ -83,14 +84,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if farm already exists (single-farm restriction)
-    const existingFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (existingFarm) {
+    // Check if user already has farm context
+    try {
+      const farmContext = await getUserFarmContext(session.user.id);
       // Farm already exists, return it
-      return NextResponse.json({ farm: existingFarm });
+      return NextResponse.json({ farm: farmContext.farm });
+    } catch (error) {
+      // No farm access - proceed to create farm for owners only
+      if (!(error instanceof FarmContextError)) {
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+      }
     }
 
     // Create new farm using schema defaults
@@ -155,22 +158,23 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "No valid fields to update" }, { status: 400 });
     }
 
-    // Find user's farm
-    const existingFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
+    // Get user's farm context
+    try {
+      const farmContext = await getUserFarmContext(session.user.id);
 
-    if (!existingFarm) {
-      return NextResponse.json({ error: "Farm not found" }, { status: 404 });
+      // Update farm
+      const updatedFarm = await prisma.farm.update({
+        where: { id: farmContext.farm.id },
+        data: updateData,
+      });
+
+      return NextResponse.json({ farm: updatedFarm });
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json({ error: "No farm access" }, { status: 403 });
+      }
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
-
-    // Update farm
-    const updatedFarm = await prisma.farm.update({
-      where: { id: existingFarm.id },
-      data: updateData,
-    });
-
-    return NextResponse.json({ farm: updatedFarm });
   } catch (error) {
     console.error("Farm PUT error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
