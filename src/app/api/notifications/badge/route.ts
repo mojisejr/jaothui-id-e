@@ -94,21 +94,22 @@ export async function GET(request: NextRequest) {
 
     const { farm } = farmContext;
 
-    // Step 3: Count pending activities (activities that are not completed)
-    const pendingCount = await prisma.activity.count({
+    // Step 3: Get activity counts for both PENDING and OVERDUE in a single query
+    // This replaces the N+1 query problem with an optimized aggregated query
+    const activityCounts = await prisma.activity.groupBy({
+      by: ['status'],
       where: {
         farmId: farm.id,
-        status: 'PENDING',
+        status: { in: ['PENDING', 'OVERDUE'] },
+      },
+      _count: {
+        status: true,
       },
     });
 
-    // Step 4: Count overdue activities
-    const overdueCount = await prisma.activity.count({
-      where: {
-        farmId: farm.id,
-        status: 'OVERDUE',
-      },
-    });
+    // Step 4: Extract counts from grouped result
+    const pendingCount = activityCounts.find(c => c.status === 'PENDING')?._count.status || 0;
+    const overdueCount = activityCounts.find(c => c.status === 'OVERDUE')?._count.status || 0;
 
     // Step 5: Calculate total badge count
     const badgeCount = pendingCount + overdueCount;
