@@ -168,15 +168,29 @@ export const auth = betterAuth({
 
   /**
    * Hooks for post-authentication operations
-   * Automatically creates farm for new LINE OAuth users
+   * Automatically creates farm for new LINE OAuth users only
    */
   hooks: {
     after: createAuthMiddleware(async (ctx) => {
-      // Only target LINE OAuth callback success
-      if (ctx.path === "/callback/:id" && ctx.context?.newSession?.user) {
+      // Only target LINE OAuth callback success path
+      if (ctx.path === "/api/auth/callback/line" && ctx.context?.newSession?.user) {
         const userId = ctx.context.newSession.user.id;
 
         try {
+          // Verify this is a LINE OAuth user by checking the Account table
+          const lineAccount = await prisma.account.findFirst({
+            where: {
+              userId: userId,
+              providerId: "line",
+            },
+          });
+
+          // Only create farm for LINE OAuth users, not credential-based staff users
+          if (!lineAccount) {
+            console.log(`Skipping farm creation for non-LINE OAuth user: ${userId}`);
+            return;
+          }
+
           // Check if user already has a farm
           const existingFarm = await prisma.farm.findFirst({
             where: { ownerId: userId }
@@ -192,6 +206,8 @@ export const auth = betterAuth({
               }
             });
             console.log(`Auto-created farm for new LINE OAuth user: ${userId}`);
+          } else {
+            console.log(`Farm already exists for LINE OAuth user: ${userId}`);
           }
         } catch (error) {
           // Log error but don't break authentication
