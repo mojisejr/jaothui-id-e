@@ -41,7 +41,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { translateAnimalData } from "@/lib/animal-translations";
-import { AnimalType, AnimalGender, AnimalStatus, Prisma } from "@prisma/client";
+import { AnimalType, AnimalGender, AnimalStatus } from "@/types/animal";
 
 /**
  * Animal interface matching Prisma schema
@@ -56,7 +56,7 @@ export interface Animal {
   status: AnimalStatus;
   birthDate: string | Date | null;
   color: string | null;
-  weightKg: Prisma.Decimal | number | null;
+  weightKg: number | null;
   heightCm: number | null;
   motherTag: string | null;
   fatherTag: string | null;

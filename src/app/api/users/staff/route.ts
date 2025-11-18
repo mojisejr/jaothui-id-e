@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     // Step 5: Format response
-    const staff = memberships.map((membership) => ({
+    const staff = memberships.map((membership: any) => ({
       id: membership.user.id,
       username: membership.user.username,
       firstName: membership.user.firstName,
@@ -251,7 +251,7 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(validatedData.password, 10);
 
     // Step 7: Create user, account, and membership in a transaction
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: any) => {
       // Create user with sanitized email
       const user = await tx.user.create({
         data: {

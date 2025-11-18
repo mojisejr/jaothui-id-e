@@ -163,11 +163,17 @@ export default async function AnimalPage({ params }: AnimalPageProps) {
       }
     });
 
-    // Step 7: Render page with animal data (component handles its own background)
+    // Step 7: Transform animal data to match interface (convert Decimal to number)
+    const animalData = {
+      ...animal,
+      weightKg: animal.weightKg ? Number(animal.weightKg) : null,
+    };
+
+    // Step 8: Render page with animal data (component handles its own background)
     return (
       <Suspense fallback={<AnimalDetailSkeleton />}>
         <AnimalDetailCard 
-          animal={animal}
+          animal={animalData}
           notificationCount={notificationCount}
         />
       </Suspense>

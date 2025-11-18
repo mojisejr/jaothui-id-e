@@ -14,7 +14,7 @@
  */
 
 import { prisma } from './prisma';
-import type { Farm, FarmMember, Role } from '@prisma/client';
+import type { Farm, FarmMember, Role } from '@/types/farm';
 
 /**
  * Farm Context Result Interface
@@ -246,14 +246,14 @@ export async function getAllUserFarmContexts(
 
     // Combine and format results
     const contexts: FarmContextResult[] = [
-      ...ownedFarms.map(farm => ({
+      ...ownedFarms.map((farm: any) => ({
         farm,
         role: 'OWNER' as Role,
         accessLevel: 'full' as 'full' | 'limited'
       })),
       ...memberships
-        .filter(membership => membership.farm) // Ensure farm exists
-        .map(membership => ({
+        .filter((membership: any) => membership.farm) // Ensure farm exists
+        .map((membership: any) => ({
           farm: membership.farm!,
           role: membership.role,
           accessLevel: (membership.role === 'OWNER' ? 'full' : 'limited') as 'full' | 'limited'
