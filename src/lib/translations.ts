@@ -14,7 +14,7 @@
  * @language TypeScript (strict mode)
  */
 
-import { AnimalType, AnimalGender, AnimalStatus } from '@prisma/client';
+import { AnimalType, AnimalGender, AnimalStatus } from '@/types/animal';
 
 /**
  * Translate AnimalType enum to Thai

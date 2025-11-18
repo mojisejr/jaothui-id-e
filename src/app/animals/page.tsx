@@ -41,6 +41,7 @@ import TopNavigation from "@/components/profile/TopNavigation";
 import TabNavigation, { TabType } from "@/components/ui/tab-navigation";
 import AnimalCard from "@/components/animals/AnimalCard";
 import SearchFilter from "@/components/animals/SearchFilter";
+import ActivitiesTab from "@/components/activities/ActivitiesTab";
 
 // Types based on Prisma schema
 type AnimalType = 'WATER_BUFFALO' | 'SWAMP_BUFFALO' | 'CATTLE' | 'GOAT' | 'PIG' | 'CHICKEN';
@@ -67,22 +68,6 @@ interface AnimalsApiResponse {
   pendingActivitiesCount: number;
 }
 
-/**
- * Mock Notifications Tab Component
- *
- * Placeholder content for the notifications tab as specified in the task.
- * Shows development status with Thai language text.
- */
-const MockNotificationsTab = () => (
-  <div className="flex flex-col items-center justify-center py-20 text-center">
-    <div className="text-6xl mb-4">🚧</div>
-    <h3 className="text-xl font-semibold mb-2">กำลังพัฒนา...</h3>
-    <p className="text-muted-foreground max-w-sm">
-      ฟีเจอร์รายการแจ้งเตือนกำลังอยู่ในระหว่างการพัฒนา
-      จะเป็นส่วนแสดงกิจกรรมที่ต้องทำเพื่อดูแลกระบือของคุณ
-    </p>
-  </div>
-);
 
 /**
  * Main AnimalListTabs Page Component
@@ -469,13 +454,11 @@ export default function AnimalListTabsPage() {
               </div>
             </div>
           ) : (
-            // Notifications Tab - Mock Content
+            // Notifications Tab - Activities Integration
             <div className="flex justify-center">
-              <Card className="w-full max-w-md shadow-none">
-                <CardContent className="p-6">
-                  <MockNotificationsTab />
-                </CardContent>
-              </Card>
+              <div className="w-full max-w-2xl">
+                <ActivitiesTab />
+              </div>
             </div>
           )}
         </div>

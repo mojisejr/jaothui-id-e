@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import { AnimalPanelContent } from '@/app/animals/[id]/panel/AnimalPanelContent';
-import { AnimalType, AnimalGender, AnimalStatus } from '@prisma/client';
+import { AnimalType, AnimalGender, AnimalStatus } from '@/types/animal';
 
 // Mock Next.js router
 jest.mock('next/navigation', () => ({

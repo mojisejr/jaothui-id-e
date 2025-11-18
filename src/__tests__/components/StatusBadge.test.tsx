@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { StatusBadge } from '@/components/ui/status-badge';
-import { ActivityStatus } from '@prisma/client';
+import { ActivityStatus } from '@/types/activity';
 
 describe('StatusBadge Component', () => {
   describe('Rendering with different statuses', () => {

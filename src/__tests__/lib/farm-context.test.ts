@@ -7,7 +7,7 @@
 
 import { getUserFarmContext, getAllUserFarmContexts, checkUserFarmAccess, FarmContextError } from '../../lib/farm-context';
 import { prisma } from '../../lib/prisma';
-import type { Farm, FarmMember, Role } from '@prisma/client';
+import type { Farm, FarmMember, Role } from '@/types/farm';
 
 // Mock the prisma client
 jest.mock('../../lib/prisma', () => ({

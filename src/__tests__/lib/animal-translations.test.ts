@@ -31,7 +31,7 @@ import {
   animalGenderThaiMap,
   animalStatusThaiMap,
 } from '../../lib/animal-translations';
-import { AnimalType, AnimalGender, AnimalStatus } from '@prisma/client';
+import { AnimalType, AnimalGender, AnimalStatus } from '@/types/animal';
 
 describe('Enhanced Animal Translation Utilities', () => {
   beforeEach(() => {

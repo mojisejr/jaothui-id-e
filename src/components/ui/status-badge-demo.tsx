@@ -6,7 +6,7 @@
  */
 
 import { StatusBadge } from '@/components/ui/status-badge';
-import { ActivityStatus } from '@prisma/client';
+import { ActivityStatus } from '@/types/activity';
 
 export default function StatusBadgeDemo() {
   const allStatuses: ActivityStatus[] = ['PENDING', 'COMPLETED', 'CANCELLED', 'OVERDUE'];

@@ -14,7 +14,7 @@ import {
   formatWeight,
   formatHeight,
 } from '../../lib/translations';
-import { AnimalType, AnimalGender, AnimalStatus } from '@prisma/client';
+import { AnimalType, AnimalGender, AnimalStatus } from '@/types/animal';
 
 describe('Translation Utilities', () => {
   describe('translateAnimalType', () => {

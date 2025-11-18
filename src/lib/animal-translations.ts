@@ -18,7 +18,7 @@
  * @language TypeScript (strict mode)
  */
 
-import { AnimalType, AnimalGender, AnimalStatus } from '@prisma/client';
+import { AnimalType, AnimalGender, AnimalStatus } from '@/types/animal';
 
 /**
  * Simple memoization function for single-argument functions

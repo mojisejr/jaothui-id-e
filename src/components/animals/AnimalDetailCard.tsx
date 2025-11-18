@@ -37,7 +37,7 @@ import { cn } from "@/lib/utils";
 import { translateAnimalData } from "@/lib/animal-translations";
 import { ArrowLeft, List, Calendar, Weight, Ruler, Edit3 } from "lucide-react";
 import TopNavigation from "@/components/profile/TopNavigation";
-import { AnimalType, AnimalGender, AnimalStatus, Prisma } from "@prisma/client";
+import { AnimalType, AnimalGender, AnimalStatus } from "@/types/animal";
 
 /**
  * Animal interface matching Prisma schema
@@ -52,7 +52,7 @@ export interface Animal {
   status: AnimalStatus;
   birthDate: string | Date | null;
   color: string | null;
-  weightKg: Prisma.Decimal | number | null;
+  weightKg: number | null;
   heightCm: number | null;
   motherTag: string | null;
   fatherTag: string | null;
