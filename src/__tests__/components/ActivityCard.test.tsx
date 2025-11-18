@@ -10,7 +10,7 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import ActivityCard from '../ActivityCard';
+import ActivityCard from '@/components/activities/ActivityCard';
 import { Activity } from '@/types/activity';
 
 describe('ActivityCard', () => {
