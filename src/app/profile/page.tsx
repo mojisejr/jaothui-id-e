@@ -103,7 +103,7 @@ export default function ProfilePage() {
       if (response.ok) {
         const data = await response.json();
         setFarm(data.farm);
-      } else if (response.status === 404) {
+      } else if (response.status === 403) {
         // Farm doesn't exist, create one
         await createFarm();
       } else {
