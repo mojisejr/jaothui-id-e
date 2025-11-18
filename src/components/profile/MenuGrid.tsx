@@ -69,7 +69,7 @@ export interface MenuGridProps {
 
 /**
  * Default menu items for the system
- * Includes all 6 menu options with Thai and English labels
+ * Includes 3 essential menu options with Thai and English labels
  */
 export const defaultMenuItems: MenuItem[] = [
   {
@@ -97,50 +97,26 @@ export const defaultMenuItems: MenuItem[] = [
     description: "เพิ่มพนักงานในฟาร์ม",
     allowedRoles: ['OWNER'], // Only farm owners can access staff management
   },
-  {
-    id: "feeding",
-    icon: "🌾",
-    label: "การเลี้ยงดู",
-    helpText: "Feeding",
-    href: "/feeding",
-    description: "จัดการการให้อาหารและการเลี้ยงดู",
-  },
-  {
-    id: "reports",
-    icon: "📊",
-    label: "รายงาน",
-    helpText: "Reports",
-    href: "/reports",
-    description: "ดูรายงานและสถิติ",
-  },
-  {
-    id: "settings",
-    icon: "⚙️",
-    label: "ตั้งค่า",
-    helpText: "Settings",
-    href: "/settings",
-    description: "ตั้งค่าระบบและการใช้งาน",
-  },
 ];
 
 /**
  * MenuGrid Component
- * 
- * Renders a responsive 3×2 grid of menu items with large icons and dual-language labels.
+ *
+ * Renders a responsive vertical list of menu items with large icons and dual-language labels.
  * Optimized for elderly users with extra-large touch targets and high contrast.
- * 
+ *
  * @param {MenuGridProps} props - Component props
  * @returns {React.ReactElement} Rendered MenuGrid component
- * 
+ *
  * @example
  * ```tsx
  * <MenuGrid menuItems={defaultMenuItems} />
  * ```
- * 
+ *
  * @example
  * ```tsx
- * <MenuGrid 
- *   menuItems={customMenuItems} 
+ * <MenuGrid
+ *   menuItems={customMenuItems}
  *   className="mt-4"
  * />
  * ```
@@ -170,7 +146,7 @@ export function MenuGrid({
       aria-label="หน้าหลักเมนู"
     >
       <div
-        className="grid grid-cols-3 gap-3 w-full max-w-2xl mx-auto"
+        className="flex flex-col gap-3 w-full max-w-md mx-auto"
         role="group"
         aria-label="กลุ่มเมนูหลัก"
       >
@@ -180,9 +156,9 @@ export function MenuGrid({
             href={item.href}
             className={cn(
               // Base styles
-              "flex flex-col items-center justify-center",
-              "min-h-[80px] min-w-[100px]",
-              "p-3 rounded-xl",
+              "flex items-center",
+              "min-h-[120px] w-full",
+              "p-4 rounded-xl",
               // Background and border
               "bg-card border border-border",
               "hover:shadow-xs",
@@ -200,30 +176,33 @@ export function MenuGrid({
             role="link"
             tabIndex={0}
           >
-            {/* Icon - 64px size for elderly visibility */}
+            {/* Icon - 48px size for list layout */}
             <span
-              className="text-6xl mb-1"
+              className="text-5xl mr-4 flex-shrink-0"
               role="img"
               aria-hidden="true"
             >
               {item.icon}
             </span>
 
-            {/* Thai Label - 16px, Bold */}
-            <span
-              className="text-base font-bold text-foreground text-center leading-tight"
-              lang="th"
-            >
-              {item.label}
-            </span>
+            {/* Text Content - Flex column */}
+            <div className="flex flex-col flex-grow">
+              {/* Thai Label - 18px, Bold */}
+              <span
+                className="text-lg font-bold text-foreground leading-tight"
+                lang="th"
+              >
+                {item.label}
+              </span>
 
-            {/* English Help Text - 12px */}
-            <span
-              className="text-xs text-muted-foreground text-center mt-0.5"
-              lang="en"
-            >
-              {item.helpText}
-            </span>
+              {/* English Help Text - 14px */}
+              <span
+                className="text-sm text-muted-foreground mt-1"
+                lang="en"
+              >
+                {item.helpText}
+              </span>
+            </div>
           </Link>
         ))}
       </div>
@@ -233,10 +212,10 @@ export function MenuGrid({
 
 /**
  * MenuGridItem Component
- * 
+ *
  * Individual menu item component (for custom implementations)
  * Can be used separately if needed for special cases
- * 
+ *
  * @param {MenuItem} item - Menu item data
  * @returns {React.ReactElement} Rendered menu item
  */
@@ -246,9 +225,9 @@ export function MenuGridItem({ item }: { item: MenuItem }): React.ReactElement {
       href={item.href}
       className={cn(
         // Base styles
-        "flex flex-col items-center justify-center",
-        "min-h-[80px] min-w-[100px]",
-        "p-3 rounded-xl",
+        "flex items-center",
+        "min-h-[120px] w-full",
+        "p-4 rounded-xl",
         // Background and border
         "bg-card border border-border",
         "shadow-xs hover:shadow-xs",
@@ -266,30 +245,33 @@ export function MenuGridItem({ item }: { item: MenuItem }): React.ReactElement {
       role="link"
       tabIndex={0}
     >
-      {/* Icon - 64px size */}
+      {/* Icon - 48px size for list layout */}
       <span
-        className="text-6xl mb-1"
+        className="text-5xl mr-4 flex-shrink-0"
         role="img"
         aria-hidden="true"
       >
         {item.icon}
       </span>
 
-      {/* Thai Label - 16px, Bold */}
-      <span
-        className="text-base font-bold text-foreground text-center leading-tight"
-        lang="th"
-      >
-        {item.label}
-      </span>
+      {/* Text Content - Flex column */}
+      <div className="flex flex-col flex-grow">
+        {/* Thai Label - 18px, Bold */}
+        <span
+          className="text-lg font-bold text-foreground leading-tight"
+          lang="th"
+        >
+          {item.label}
+        </span>
 
-      {/* English Help Text - 12px */}
-      <span
-        className="text-xs text-muted-foreground text-center mt-0.5"
-        lang="en"
-      >
-        {item.helpText}
-      </span>
+        {/* English Help Text - 14px */}
+        <span
+          className="text-sm text-muted-foreground mt-1"
+          lang="en"
+        >
+          {item.helpText}
+        </span>
+      </div>
     </Link>
   );
 }
