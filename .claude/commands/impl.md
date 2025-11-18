@@ -32,13 +32,23 @@ Implementation Workflow - Execute GitHub issue implementation based on current m
 3. **Validate Environment**:
    - Ensure clean git working directory
    - Verify we're in a git repository
+   - **CRITICAL**: Verify we are NOT on main branch - abort if on main
 
 ### Implementation Steps
 
-1. **Sync Staging Branch**:
+1. **FORCE Staging Branch Checkout**:
    ```bash
-   git checkout staging
+   # HARD ENFORCE: staging ONLY - never checkout main
+   git fetch origin staging --update-head-ok
+   git checkout -B staging origin/staging --force
    git pull origin staging
+
+   # VERIFY we are on staging branch
+   if [ "$(git branch --show-current)" != "staging" ]; then
+     echo "ERROR: Failed to switch to staging branch. Current branch: $(git branch --show-current)"
+     exit 1
+   fi
+   echo "✅ CONFIRMED: Now on staging branch"
    ```
 
 2. **Create Feature Branch**:
@@ -125,7 +135,8 @@ Implementation Workflow - Execute GitHub issue implementation based on current m
 
 ## Notes
 
-- Always works from staging branch as base
+- **CRITICAL**: Always works from staging branch as base - NEVER from main
+- **HARD ENFORCED**: Command will fail if trying to run from main branch
 - Feature branch naming is strictly enforced
 - 100% validation is mandatory before commits
 - Mode affects who performs implementation steps

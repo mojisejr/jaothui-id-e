@@ -69,7 +69,7 @@ export default function CreateAnimalPage() {
         if (response.ok) {
           const data = await response.json();
           setFarmId(data.farm.id);
-        } else if (response.status === 404) {
+        } else if (response.status === 403) {
           // Farm doesn't exist, create one
           const createResponse = await fetch("/api/farm", {
             method: "POST",

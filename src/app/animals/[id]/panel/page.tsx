@@ -33,6 +33,7 @@ import { Suspense } from "react";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 import AnimalPanelContent from "./AnimalPanelContent";
 
 /**
@@ -115,22 +116,29 @@ export default async function AnimalPanelPage({ params }: AnimalPanelPageProps) 
       notFound();
     }
 
-    // Step 4: Verify user has access to this animal's farm
-    const userFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
+    // Step 4: Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      console.error("Farm context error:", error);
+      return <AnimalPanelError error="ไม่พบฟาร์มของคุณ" />;
+    }
 
-    if (!userFarm || userFarm.id !== animal.farmId) {
+    const { farm } = farmContext;
+
+    // Step 5: Verify user has access to this animal's farm
+    if (farm.id !== animal.farmId) {
       return (
         <AnimalPanelError error="คุณไม่มีสิทธิ์เข้าถึงข้อมูลนี้" />
       );
     }
 
-    // Step 5: Fetch notification count (due/overdue activities)
+    // Step 6: Fetch notification count (due/overdue activities)
     const today = new Date();
     const notificationCount = await prisma.activity.count({
       where: {
-        farmId: userFarm.id,
+        farmId: farm.id,
         status: {
           in: ['PENDING', 'OVERDUE']
         },
@@ -150,11 +158,11 @@ export default async function AnimalPanelPage({ params }: AnimalPanelPageProps) 
       }
     });
 
-    // Step 6: Fetch activities for this animal
+    // Step 7: Fetch activities for this animal
     const activities = await prisma.activity.findMany({
       where: {
         animalId: id,
-        farmId: userFarm.id,
+        farmId: farm.id,
       },
       include: {
         creator: {
@@ -177,7 +185,7 @@ export default async function AnimalPanelPage({ params }: AnimalPanelPageProps) 
       },
     });
 
-    // Step 7: Render page with animal data and activities (client component handles tabs and content)
+    // Step 8: Render page with animal data and activities (client component handles tabs and content)
     return (
       <Suspense fallback={<AnimalPanelSkeleton />}>
         <AnimalPanelContent 

@@ -26,6 +26,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
 /**
  * Required Next.js configuration for API routes
@@ -96,12 +97,41 @@ export async function GET(
       );
     }
 
-    // Step 4: Verify user has access to this animal's farm
-    const userFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
+    // Step 4: Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม",
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      );
+    }
 
-    if (!userFarm || userFarm.id !== animal.farmId) {
+    const { farm } = farmContext;
+
+    // Step 5: Verify user has access to this animal's farm
+    if (farm.id !== animal.farmId) {
       return NextResponse.json(
         {
           success: false,
@@ -115,7 +145,7 @@ export async function GET(
       );
     }
 
-    // Step 5: Return animal data
+    // Step 6: Return animal data
     return NextResponse.json(
       {
         success: true,
@@ -221,12 +251,41 @@ export async function PUT(
       );
     }
 
-    // Step 5: Verify user has access to this animal's farm
-    const userFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
+    // Step 5: Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม",
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      );
+    }
 
-    if (!userFarm || userFarm.id !== animal.farmId) {
+    const { farm } = farmContext;
+
+    // Step 6: Verify user has access to this animal's farm
+    if (farm.id !== animal.farmId) {
       return NextResponse.json(
         {
           success: false,
@@ -240,7 +299,7 @@ export async function PUT(
       );
     }
 
-    // Step 6: Update animal
+    // Step 7: Update animal
     const updatedAnimal = await prisma.animal.update({
       where: { id: params.id },
       data: {
@@ -254,7 +313,7 @@ export async function PUT(
       },
     });
 
-    // Step 7: Return updated animal
+    // Step 8: Return updated animal
     return NextResponse.json(
       {
         success: true,
@@ -374,12 +433,41 @@ export async function DELETE(
       );
     }
 
-    // Step 5: Verify user has access to this animal's farm
-    const userFarm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
+    // Step 5: Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม",
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      );
+    }
 
-    if (!userFarm || userFarm.id !== animal.farmId) {
+    const { farm } = farmContext;
+
+    // Step 6: Verify user has access to this animal's farm
+    if (farm.id !== animal.farmId) {
       return NextResponse.json(
         {
           success: false,
@@ -393,7 +481,7 @@ export async function DELETE(
       );
     }
 
-    // Step 6: Update animal status (soft delete)
+    // Step 7: Update animal status (soft delete)
     const updatedAnimal = await prisma.animal.update({
       where: { id: params.id },
       data: {
@@ -401,7 +489,7 @@ export async function DELETE(
       },
     });
 
-    // Step 7: Return success response
+    // Step 8: Return success response
     return NextResponse.json(
       {
         success: true,

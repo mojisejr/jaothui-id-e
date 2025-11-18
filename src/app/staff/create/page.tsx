@@ -71,7 +71,7 @@ export default function CreateStaffPage() {
         if (response.ok) {
           const data = await response.json();
           setFarmId(data.farm.id);
-        } else if (response.status === 404) {
+        } else if (response.status === 403) {
           // Farm doesn't exist - must be created first
           setFarmError("ไม่พบฟาร์ม กรุณาสร้างฟาร์มก่อนเพิ่มพนักงาน");
         } else {
