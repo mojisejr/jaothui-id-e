@@ -49,6 +49,34 @@ import { ProfileCard, Farm } from "@/components/profile/ProfileCard";
 import MenuGrid, { defaultMenuItems, type UserRole } from "@/components/profile/MenuGrid";
 import { GhostLogoutButton } from "@/components/profile/GhostLogoutButton";
 
+/**
+ * MenuSkeleton Component
+ * Loading state for the menu grid during role determination
+ */
+function MenuSkeleton() {
+  return (
+    <div className="w-full max-w-md mx-auto">
+      <div className="flex flex-col gap-3">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="flex items-center min-h-[120px] w-full p-4 rounded-xl bg-card border border-border"
+          >
+            {/* Icon skeleton */}
+            <div className="w-20 h-20 bg-muted rounded-lg mr-4 flex-shrink-0 animate-pulse" />
+
+            {/* Text content skeleton */}
+            <div className="flex flex-col flex-grow space-y-2">
+              <div className="h-6 bg-muted rounded w-3/4 animate-pulse" />
+              <div className="h-4 bg-muted rounded w-1/2 animate-pulse" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ProfilePage() {
   const router = useRouter();
   const { data: session, isPending, error } = useSession();
@@ -57,7 +85,7 @@ export default function ProfilePage() {
   const [farm, setFarm] = React.useState<Farm | null>(null);
   const [isLoadingFarm, setIsLoadingFarm] = React.useState(true);
   const [farmError, setFarmError] = React.useState<string | null>(null);
-  const [userRole, setUserRole] = React.useState<UserRole>('OWNER');
+  const [userRole, setUserRole] = React.useState<UserRole | null>(null);
 
   /**
    * Redirect to login if not authenticated
@@ -278,11 +306,15 @@ export default function ProfilePage() {
 
           {/* Menu Grid Section */}
           <div className="flex justify-center">
-            <MenuGrid
-              menuItems={defaultMenuItems}
-              userRole={userRole}
-              className="w-full max-w-2xl"
-            />
+            {userRole ? (
+              <MenuGrid
+                menuItems={defaultMenuItems}
+                userRole={userRole}
+                className="w-full max-w-md"
+              />
+            ) : (
+              <MenuSkeleton />
+            )}
           </div>
 
           {/* Logout Button Section */}
