@@ -185,11 +185,17 @@ export default async function AnimalPanelPage({ params }: AnimalPanelPageProps) 
       },
     });
 
-    // Step 8: Render page with animal data and activities (client component handles tabs and content)
+    // Step 8: Transform animal data to match interface (convert Decimal to number)
+    const animalData = {
+      ...animal,
+      weightKg: animal.weightKg ? Number(animal.weightKg) : null,
+    };
+
+    // Step 9: Render page with animal data and activities (client component handles tabs and content)
     return (
       <Suspense fallback={<AnimalPanelSkeleton />}>
         <AnimalPanelContent 
-          animal={animal}
+          animal={animalData}
           activities={activities}
           notificationCount={notificationCount}
         />
