@@ -27,6 +27,7 @@ import { headers } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { Prisma } from "@prisma/client";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
 /**
  * Required Next.js configuration for API routes
@@ -80,24 +81,38 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    // Step 3: Get user's farm
-    const farm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!farm) {
+    // Step 3: Get user's farm context
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "FARM_NOT_FOUND",
-            message: "ไม่พบฟาร์มของคุณ",
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูล",
           },
           timestamp: new Date().toISOString(),
         },
-        { status: 404 }
+        { status: 500 }
       );
     }
+
+    const { farm } = farmContext;
 
     // Step 4: Build where clause
     const whereClause: any = {
@@ -255,24 +270,38 @@ export async function POST(request: NextRequest) {
 
     const validatedData = activitySchema.parse(body);
 
-    // Step 4: Get user's farm
-    const farm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!farm) {
+    // Step 4: Get user's farm context
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "FARM_NOT_FOUND",
-            message: "ไม่พบฟาร์มของคุณ",
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการสร้างกิจกรรม",
           },
           timestamp: new Date().toISOString(),
         },
-        { status: 404 }
+        { status: 500 }
       );
     }
+
+    const { farm } = farmContext;
 
     // Step 5: Verify animal belongs to user's farm
     const animal = await prisma.animal.findUnique({
