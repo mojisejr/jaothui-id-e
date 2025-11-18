@@ -45,7 +45,14 @@ export interface MenuItem {
   href: string;
   /** Accessibility description for screen readers */
   description?: string;
+  /** User roles that can access this menu item */
+  allowedRoles?: UserRole[];
 }
+
+/**
+ * User role type for menu filtering
+ */
+export type UserRole = 'OWNER' | 'MEMBER';
 
 /**
  * MenuGridProps interface
@@ -54,6 +61,8 @@ export interface MenuItem {
 export interface MenuGridProps {
   /** Array of menu items to display in the grid */
   menuItems: MenuItem[];
+  /** User role for filtering menu items */
+  userRole?: UserRole;
   /** Optional additional CSS classes */
   className?: string;
 }
@@ -86,6 +95,7 @@ export const defaultMenuItems: MenuItem[] = [
     helpText: "Add Staff",
     href: "/staff/create",
     description: "เพิ่มพนักงานในฟาร์ม",
+    allowedRoles: ['OWNER'], // Only farm owners can access staff management
   },
   {
     id: "feeding",
@@ -135,10 +145,21 @@ export const defaultMenuItems: MenuItem[] = [
  * />
  * ```
  */
-export function MenuGrid({ 
-  menuItems = defaultMenuItems, 
-  className 
+export function MenuGrid({
+  menuItems = defaultMenuItems,
+  userRole = 'OWNER',
+  className
 }: MenuGridProps): React.ReactElement {
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter((item) => {
+    // If no allowedRoles specified, allow all users
+    if (!item.allowedRoles || item.allowedRoles.length === 0) {
+      return true;
+    }
+    // Only show items that match user's role
+    return item.allowedRoles.includes(userRole);
+  });
+
   return (
     <nav
       className={cn(
@@ -153,7 +174,7 @@ export function MenuGrid({
         role="group"
         aria-label="กลุ่มเมนูหลัก"
       >
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <Link
             key={item.id}
             href={item.href}
