@@ -27,6 +27,7 @@ import { prisma } from "@/lib/prisma";
 import { animalSchema } from "@/lib/validations/animal";
 import { Prisma } from "@prisma/client";
 import { ZodError } from "zod";
+import { getUserFarmContext, FarmContextError } from "@/lib/farm-context";
 
 /**
  * Required Next.js configuration for API routes
@@ -83,14 +84,38 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Find user's farm using existing Prisma pattern
-    const farm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!farm) {
-      return NextResponse.json({ error: "Farm not found" }, { status: 404 });
+    // Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "NO_FARM_ACCESS",
+              message: "ไม่พบฟาร์มของคุณ",
+            },
+            timestamp: new Date().toISOString(),
+          },
+          { status: 403 }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม",
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      );
     }
+
+    const { farm } = farmContext;
 
     // Build where clause for animal query
     const whereClause: any = {
@@ -188,62 +213,49 @@ export async function POST(request: NextRequest) {
     // Step 2: Parse request body
     const body = await request.json();
 
-    // Step 3: Get user's farm (following existing farm API pattern)
-    const farm = await prisma.farm.findFirst({
-      where: { ownerId: session.user.id },
-    });
-
-    if (!farm) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: "FARM_NOT_FOUND",
-            message: "ไม่พบฟาร์มของคุณ กรุณาสร้างฟาร์มก่อน",
-          },
-          timestamp: new Date().toISOString(),
-        },
-        { status: 404 }
-      );
-    }
-
-    // Step 4: Verify user permissions (owner or member)
-    if (farm.ownerId !== session.user.id) {
-      // Only check membership for non-owners
-      const membership = await prisma.farmMember.findUnique({
-        where: {
-          farmId_userId: {
-            farmId: farm.id,
-            userId: session.user.id,
-          },
-        },
-      });
-
-      if (!membership) {
+    // Step 3: Get user's farm context using farm context resolver
+    let farmContext;
+    try {
+      farmContext = await getUserFarmContext(session.user.id);
+    } catch (error) {
+      if (error instanceof FarmContextError) {
         return NextResponse.json(
           {
             success: false,
             error: {
-              code: "FORBIDDEN",
-              message: "คุณไม่มีสิทธิ์เข้าถึงฟาร์มนี้",
+              code: "FARM_NOT_FOUND",
+              message: "ไม่พบฟาร์มของคุณ กรุณาสร้างฟาร์มก่อน",
             },
             timestamp: new Date().toISOString(),
           },
           { status: 403 }
         );
       }
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: "INTERNAL_ERROR",
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูลฟาร์ม",
+          },
+          timestamp: new Date().toISOString(),
+        },
+        { status: 500 }
+      );
     }
 
-    // Step 5: Auto-populate farmId from session (farm isolation)
+    const { farm } = farmContext;
+
+    // Step 4: Auto-populate farmId from session (farm isolation)
     const dataWithFarm = {
       ...body,
       farmId: farm.id,
     };
 
-    // Step 6: Validate input with Zod schema (from Task 1.1)
+    // Step 5: Validate input with Zod schema (from Task 1.1)
     const validatedData = animalSchema.parse(dataWithFarm);
 
-    // Step 7: Create animal in database via Prisma
+    // Step 6: Create animal in database via Prisma
     // Status is auto-set to "ACTIVE" by schema default
     // Timestamps are auto-managed by Prisma
     const animal = await prisma.animal.create({
@@ -265,7 +277,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Step 8: Return success response with created animal
+    // Step 7: Return success response with created animal
     return NextResponse.json(
       {
         success: true,
