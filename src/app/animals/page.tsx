@@ -59,6 +59,7 @@ interface Animal {
   color?: string | null;
   imageUrl?: string | null;
   createdAt: string;
+  notificationCount?: number;
 }
 
 interface AnimalsApiResponse {
@@ -399,7 +400,7 @@ export default function AnimalListTabsPage() {
                         <div className="flex justify-center">
                           <AnimalCard
                             animal={animal}
-                            notificationCount={Math.floor(Math.random() * 3)} // Mock notification count
+                            notificationCount={animal.notificationCount ?? 0}
                             onPress={() => {
                               // Navigate to animal details page
                               router.push(`/animals/${animal.id}`);
