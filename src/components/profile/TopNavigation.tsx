@@ -76,11 +76,14 @@ export function TopNavigation({
   const router = useRouter();
   const { badgeCount, breakdown, isLoading, error, mutate } = useNotifications();
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   /**
    * Handle bell icon click - Navigate to activities view with filters
+   * Shows loading state during navigation to provide user feedback
    */
   const handleBellClick = () => {
+    setIsNavigating(true);
     router.push('/animals?tab=activities&status=pending,overdue');
   };
 
@@ -104,6 +107,13 @@ export function TopNavigation({
       console.error('Notification error:', error);
     }
   }, [error]);
+
+  // Reset navigation loading state on unmount
+  React.useEffect(() => {
+    return () => {
+      setIsNavigating(false);
+    };
+  }, []);
   return (
     <nav
       className={cn(
@@ -145,18 +155,21 @@ export function TopNavigation({
                 "focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2"
               )}
               aria-label={
-                badgeCount > 0
+                isNavigating
+                  ? 'กำลังโหลดหน้าการแจ้งเตือน...'
+                  : badgeCount > 0
                   ? `การแจ้งเตือน ${badgeCount} รายการ (${breakdown.pending} รอดำเนินการ, ${breakdown.overdue} เกินกำหนด)`
                   : 'ไม่มีการแจ้งเตือน'
               }
-              disabled={isLoading}
+              disabled={isLoading || isNavigating}
+              aria-busy={isNavigating}
             >
-              {isLoading ? (
+              {isLoading || isNavigating ? (
                 <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
               ) : (
                 <Bell className="h-5 w-5" aria-hidden="true" />
               )}
-              {badgeCount > 0 && !isLoading && (
+              {badgeCount > 0 && !isLoading && !isNavigating && (
                 <span
                   className={cn(
                     "absolute -top-1 -right-1",

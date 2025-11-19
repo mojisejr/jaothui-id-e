@@ -99,6 +99,7 @@ export const AnimalSearchField: React.FC<AnimalSearchFieldProps> = ({
   const [searchResults, setSearchResults] = React.useState<Animal[]>([]);
   const [error, setError] = React.useState<string | null>(null);
   const [showResults, setShowResults] = React.useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   // Refs for managing focus and clicks outside
   const searchContainerRef = React.useRef<HTMLDivElement>(null);
@@ -197,8 +198,12 @@ export const AnimalSearchField: React.FC<AnimalSearchFieldProps> = ({
   /**
    * Handle result selection
    * Navigates to animal detail page and optionally calls callback
+   * Shows loading state during navigation
    */
   const handleResultClick = (animal: Animal) => {
+    // Set navigating state
+    setIsNavigating(true);
+
     // Call callback if provided
     if (onResultSelect) {
       onResultSelect(animal);
@@ -207,7 +212,7 @@ export const AnimalSearchField: React.FC<AnimalSearchFieldProps> = ({
     // Navigate to animal detail page
     router.push(`/animals/${animal.id}`);
 
-    // Clear search
+    // Clear search (navigation will unmount component)
     setSearchQuery("");
     setSearchResults([]);
     setShowResults(false);
@@ -326,11 +331,13 @@ export const AnimalSearchField: React.FC<AnimalSearchFieldProps> = ({
                       key={animal.id}
                       onClick={() => handleResultClick(animal)}
                       onKeyDown={(e) => handleResultKeyDown(e, animal)}
-                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors text-left min-h-[44px] focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                      disabled={isNavigating}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-accent/50 transition-colors text-left min-h-[44px] focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                       role="listitem"
                       aria-label={`เลือกกระบือ ${animal.tagId}${
                         animal.name ? ` ชื่อ ${animal.name}` : ""
                       }`}
+                      aria-busy={isNavigating}
                     >
                       {/* Animal Emoji */}
                       <span
@@ -357,13 +364,20 @@ export const AnimalSearchField: React.FC<AnimalSearchFieldProps> = ({
                         </div>
                       </div>
 
-                      {/* Arrow Indicator */}
-                      <div
-                        className="text-muted-foreground"
-                        aria-hidden="true"
-                      >
-                        →
-                      </div>
+                      {/* Loading indicator or Arrow */}
+                      {isNavigating ? (
+                        <Loader2 
+                          className="w-5 h-5 text-muted-foreground animate-spin" 
+                          aria-hidden="true"
+                        />
+                      ) : (
+                        <div
+                          className="text-muted-foreground"
+                          aria-hidden="true"
+                        >
+                          →
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
