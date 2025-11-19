@@ -21,6 +21,7 @@
  */
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { Calendar, AlertCircle, Check, X } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -104,12 +105,18 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
   onStatusUpdate,
   onPress
 }) => {
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = React.useState(false);
+  const [isNavigating, setIsNavigating] = React.useState(false);
 
   const handleCardClick = () => {
     if (onPress) {
       onPress();
     }
+    
+    // Navigate to activity detail page
+    setIsNavigating(true);
+    router.push(`/activities/${activity.id}`);
   };
 
   const handleComplete = async (e: React.MouseEvent) => {
@@ -147,8 +154,31 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
     <Card
       className="w-full border-border hover:shadow-xs transition-all cursor-pointer bg-card/80 backdrop-blur-xs"
       onClick={handleCardClick}
+      role="button"
+      tabIndex={0}
+      aria-label={`ดูรายละเอียดกิจกรรม: ${activity.title}`}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCardClick();
+        }
+      }}
     >
       <CardContent className="p-3">
+        {/* Loading overlay */}
+        {isNavigating && (
+          <div className="absolute inset-0 bg-background/50 backdrop-blur-xs flex items-center justify-center rounded-xl z-10">
+            <div
+              className="inline-block h-6 w-6 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+              role="status"
+              aria-label="กำลังโหลด"
+            >
+              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                กำลังโหลด...
+              </span>
+            </div>
+          </div>
+        )}
         {/* Single Row Layout */}
         <div className="flex items-start justify-between gap-4">
           {/* Left: Activity Info */}
