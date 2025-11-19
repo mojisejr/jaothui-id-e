@@ -2,7 +2,7 @@
  * ActivityCard Component Tests - Jaothui ID-Trace System
  * 
  * Unit tests for ActivityCard component
- * Tests display, status badges, and action buttons
+ * Tests display, status badges, action buttons, and navigation
  * 
  * @see /src/components/activities/ActivityCard.tsx
  */
@@ -12,8 +12,23 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ActivityCard from '@/components/activities/ActivityCard';
 import { Activity } from '@/types/activity';
+import { useRouter } from 'next/navigation';
+
+// Mock next/navigation
+jest.mock('next/navigation', () => ({
+  useRouter: jest.fn(),
+}));
 
 describe('ActivityCard', () => {
+  const mockPush = jest.fn();
+  
+  beforeEach(() => {
+    (useRouter as jest.Mock).mockReturnValue({
+      push: mockPush,
+    });
+    mockPush.mockClear();
+  });
+
   const mockActivity: Activity = {
     id: 'activity-1',
     farmId: 'farm-1',
@@ -121,5 +136,58 @@ describe('ActivityCard', () => {
     // Should have destructive styling for overdue
     const dueDateElement = screen.getByText(/ครบกำหนด:/).closest('div');
     expect(dueDateElement).toHaveClass('text-destructive');
+  });
+
+  it('navigates to activity detail page when card is clicked', async () => {
+    render(<ActivityCard activity={mockActivity} />);
+    
+    const card = screen.getByRole('button', { name: /ดูรายละเอียดกิจกรรม/ });
+    fireEvent.click(card);
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/activities/activity-1');
+    });
+  });
+
+  it('shows loading state during navigation', async () => {
+    render(<ActivityCard activity={mockActivity} />);
+    
+    const card = screen.getByRole('button', { name: /ดูรายละเอียดกิจกรรม/ });
+    fireEvent.click(card);
+    
+    // Check for loading spinner
+    await waitFor(() => {
+      expect(screen.getByRole('status', { name: /กำลังโหลด/ })).toBeInTheDocument();
+    });
+  });
+
+  it('has proper accessibility attributes for navigation', () => {
+    render(<ActivityCard activity={mockActivity} />);
+    
+    const card = screen.getByRole('button', { name: /ดูรายละเอียดกิจกรรม/ });
+    expect(card).toHaveAttribute('tabIndex', '0');
+    expect(card).toHaveAttribute('aria-label');
+  });
+
+  it('navigates on Enter key press', async () => {
+    render(<ActivityCard activity={mockActivity} />);
+    
+    const card = screen.getByRole('button', { name: /ดูรายละเอียดกิจกรรม/ });
+    fireEvent.keyDown(card, { key: 'Enter' });
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/activities/activity-1');
+    });
+  });
+
+  it('navigates on Space key press', async () => {
+    render(<ActivityCard activity={mockActivity} />);
+    
+    const card = screen.getByRole('button', { name: /ดูรายละเอียดกิจกรรม/ });
+    fireEvent.keyDown(card, { key: ' ' });
+    
+    await waitFor(() => {
+      expect(mockPush).toHaveBeenCalledWith('/activities/activity-1');
+    });
   });
 });
