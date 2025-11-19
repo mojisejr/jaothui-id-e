@@ -20,6 +20,7 @@ jest.mock('../../lib/prisma', () => ({
       findFirst: jest.fn(),
       findMany: jest.fn(),
     },
+    $queryRaw: jest.fn(),
   },
 }));
 
@@ -65,52 +66,83 @@ describe('Farm Context Resolver', () => {
 
   describe('getUserFarmContext', () => {
     it('should return owner context when user owns a farm', async () => {
-      // Arrange
-      mockPrisma.farm.findFirst.mockResolvedValue(mockFarm);
-      mockPrisma.farmMember.findFirst.mockResolvedValue(null);
+      // Arrange - Mock the optimized query result for ownership
+      const queryResult = [{
+        access_type: 'owner' as const,
+        id: mockFarmId,
+        farm_name: 'Test Farm',
+        farm_code: 'TF001',
+        description: null,
+        province: 'Bangkok',
+        owner_id: mockUserId,
+        created_at: mockFarm.createdAt,
+        updated_at: mockFarm.updatedAt,
+        member_role: null,
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
 
       // Act
       const result = await getUserFarmContext(mockUserId);
 
       // Assert
       expect(result).toEqual({
-        farm: mockFarm,
+        farm: expect.objectContaining({
+          id: mockFarmId,
+          name: 'Test Farm',
+          ownerId: mockUserId,
+        }),
         role: 'OWNER',
         accessLevel: 'full',
       });
-      expect(mockPrisma.farm.findFirst).toHaveBeenCalledWith({
-        where: { ownerId: mockUserId },
-      });
-      expect(mockPrisma.farmMember.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should return member context when user is farm member', async () => {
-      // Arrange
-      mockPrisma.farm.findFirst.mockResolvedValue(null);
-      mockPrisma.farmMember.findFirst.mockResolvedValue(mockFarmMember);
+      // Arrange - Mock the optimized query result for membership
+      const queryResult = [{
+        access_type: 'member' as const,
+        id: mockAnotherFarmId,
+        farm_name: 'Another Farm',
+        farm_code: 'AF002',
+        description: null,
+        province: 'Chiang Mai',
+        owner_id: 'another-owner-uuid',
+        created_at: mockAnotherFarm.createdAt,
+        updated_at: mockAnotherFarm.updatedAt,
+        member_role: 'MEMBER',
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
 
       // Act
       const result = await getUserFarmContext(mockUserId);
 
       // Assert
       expect(result).toEqual({
-        farm: mockAnotherFarm,
+        farm: expect.objectContaining({
+          id: mockAnotherFarmId,
+          name: 'Another Farm',
+        }),
         role: 'MEMBER',
         accessLevel: 'limited',
       });
-      expect(mockPrisma.farm.findFirst).toHaveBeenCalledWith({
-        where: { ownerId: mockUserId },
-      });
-      expect(mockPrisma.farmMember.findFirst).toHaveBeenCalledWith({
-        where: { userId: mockUserId },
-        include: { farm: true },
-      });
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should return owner context when user has both owned farm and membership', async () => {
-      // Arrange
-      mockPrisma.farm.findFirst.mockResolvedValue(mockFarm);
-      mockPrisma.farmMember.findFirst.mockResolvedValue(mockFarmMember);
+      // Arrange - Mock query returns ownership first (due to ORDER BY access_type DESC)
+      const queryResult = [{
+        access_type: 'owner' as const,
+        id: mockFarmId,
+        farm_name: 'Test Farm',
+        farm_code: 'TF001',
+        description: null,
+        province: 'Bangkok',
+        owner_id: mockUserId,
+        created_at: mockFarm.createdAt,
+        updated_at: mockFarm.updatedAt,
+        member_role: null,
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
 
       // Act
       const result = await getUserFarmContext(mockUserId);
@@ -118,7 +150,7 @@ describe('Farm Context Resolver', () => {
       // Assert
       expect(result.role).toBe('OWNER');
       expect(result.accessLevel).toBe('full');
-      expect(mockPrisma.farmMember.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
     });
 
     it('should check specific farm access when farmId is provided', async () => {
@@ -158,9 +190,8 @@ describe('Farm Context Resolver', () => {
     });
 
     it('should throw NO_ACCESS error when user has no farm access', async () => {
-      // Arrange
-      mockPrisma.farm.findFirst.mockResolvedValue(null);
-      mockPrisma.farmMember.findFirst.mockResolvedValue(null);
+      // Arrange - Mock query returns empty array
+      mockPrisma.$queryRaw.mockResolvedValue([]);
 
       // Act & Assert
       await expect(getUserFarmContext(mockUserId)).rejects.toThrow(
@@ -192,7 +223,7 @@ describe('Farm Context Resolver', () => {
     it('should throw DATABASE_ERROR when prisma throws error', async () => {
       // Arrange
       const dbError = new Error('Database connection failed');
-      mockPrisma.farm.findFirst.mockRejectedValue(dbError);
+      mockPrisma.$queryRaw.mockRejectedValue(dbError);
 
       // Act & Assert
       await expect(getUserFarmContext(mockUserId)).rejects.toThrow(
@@ -201,20 +232,29 @@ describe('Farm Context Resolver', () => {
     });
 
     it('should handle OWNER role in membership with full access', async () => {
-      // Arrange
-      const ownerMembership: FarmMember & { farm: Farm } = {
-        ...mockFarmMember,
-        role: 'OWNER' as Role,
-      };
-      mockPrisma.farm.findFirst.mockResolvedValue(null);
-      mockPrisma.farmMember.findFirst.mockResolvedValue(ownerMembership);
+      // Arrange - Mock query returns member with OWNER role
+      const queryResult = [{
+        access_type: 'member' as const,
+        id: mockAnotherFarmId,
+        farm_name: 'Another Farm',
+        farm_code: 'AF002',
+        description: null,
+        province: 'Chiang Mai',
+        owner_id: 'another-owner-uuid',
+        created_at: mockAnotherFarm.createdAt,
+        updated_at: mockAnotherFarm.updatedAt,
+        member_role: 'OWNER',
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
 
       // Act
       const result = await getUserFarmContext(mockUserId);
 
       // Assert
       expect(result).toEqual({
-        farm: mockAnotherFarm,
+        farm: expect.objectContaining({
+          id: mockAnotherFarmId,
+        }),
         role: 'OWNER',
         accessLevel: 'full',
       });
@@ -325,8 +365,20 @@ describe('Farm Context Resolver', () => {
 
   describe('checkUserFarmAccess', () => {
     it('should return true when user has farm access', async () => {
-      // Arrange
-      mockPrisma.farm.findFirst.mockResolvedValue(mockFarm);
+      // Arrange - Mock query returns ownership
+      const queryResult = [{
+        access_type: 'owner' as const,
+        id: mockFarmId,
+        farm_name: 'Test Farm',
+        farm_code: 'TF001',
+        description: null,
+        province: 'Bangkok',
+        owner_id: mockUserId,
+        created_at: mockFarm.createdAt,
+        updated_at: mockFarm.updatedAt,
+        member_role: null,
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
 
       // Act
       const result = await checkUserFarmAccess(mockUserId);
@@ -336,9 +388,8 @@ describe('Farm Context Resolver', () => {
     });
 
     it('should return false when user has no farm access', async () => {
-      // Arrange
-      mockPrisma.farm.findFirst.mockResolvedValue(null);
-      mockPrisma.farmMember.findFirst.mockResolvedValue(null);
+      // Arrange - Mock query returns empty array
+      mockPrisma.$queryRaw.mockResolvedValue([]);
 
       // Act
       const result = await checkUserFarmAccess(mockUserId);
@@ -350,7 +401,7 @@ describe('Farm Context Resolver', () => {
     it('should re-throw non-access errors', async () => {
       // Arrange
       const dbError = new Error('Database connection failed');
-      mockPrisma.farm.findFirst.mockRejectedValue(dbError);
+      mockPrisma.$queryRaw.mockRejectedValue(dbError);
 
       // Act & Assert
       await expect(checkUserFarmAccess(mockUserId)).rejects.toThrow(

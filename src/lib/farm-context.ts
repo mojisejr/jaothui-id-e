@@ -54,10 +54,30 @@ export class FarmContextError extends Error {
 }
 
 /**
+ * Raw Query Result Interface
+ * Represents the result from the optimized farm context query
+ */
+interface FarmContextQueryResult {
+  access_type: 'owner' | 'member';
+  id: string;
+  farm_name: string;
+  farm_code: string | null;
+  description: string | null;
+  province: string | null;
+  owner_id: string;
+  created_at: Date;
+  updated_at: Date;
+  member_role?: string | null;
+}
+
+/**
  * Get User Farm Context
  *
  * This is the main utility function that resolves a user's farm context.
  * It performs ownership check first, then membership check if needed.
+ * 
+ * Performance Optimization: Uses a single optimized SQL query with UNION
+ * instead of sequential queries, reducing database round trips by 50%.
  *
  * @param userId - The user ID to check farm access for
  * @param options - Optional configuration for context resolution
@@ -99,44 +119,82 @@ export async function getUserFarmContext(
       return await getSpecificFarmContext(userId, targetFarmId);
     }
 
-    // Ownership check first (prioritized for legitimate farm owners)
-    const ownedFarm = await prisma.farm.findFirst({
-      where: {
-        ownerId: userId
-      }
-    });
+    // Optimized single query: Check both ownership and membership with UNION
+    // Ownership results come first (access_type = 'owner'), membership second
+    const results = await prisma.$queryRaw<FarmContextQueryResult[]>`
+      SELECT 
+        'owner' as access_type,
+        id,
+        farm_name,
+        farm_code,
+        NULL as description,
+        province,
+        owner_id,
+        created_at,
+        updated_at,
+        NULL as member_role
+      FROM farms 
+      WHERE owner_id = ${userId}::uuid
 
-    if (ownedFarm) {
+      UNION ALL
+
+      SELECT 
+        'member' as access_type,
+        f.id,
+        f.farm_name,
+        f.farm_code,
+        NULL as description,
+        f.province,
+        f.owner_id,
+        f.created_at,
+        f.updated_at,
+        fm.role as member_role
+      FROM farms f
+      JOIN farm_members fm ON f.id = fm.farm_id
+      WHERE fm.user_id = ${userId}::uuid
+
+      ORDER BY access_type DESC
+      LIMIT 1
+    `;
+
+    // Check if any farm access found
+    if (!results || results.length === 0) {
+      throw new FarmContextError(
+        'User has no access to any farm',
+        'NO_ACCESS'
+      );
+    }
+
+    // Process the first result (ownership takes priority due to ORDER BY)
+    const result = results[0];
+    
+    // Transform raw query result to Farm object
+    const farm: Farm = {
+      id: result.id,
+      name: result.farm_name,
+      ownerId: result.owner_id,
+      province: result.province,
+      code: result.farm_code,
+      createdAt: result.created_at,
+      updatedAt: result.updated_at,
+    };
+
+    // Determine role and access level based on access type
+    if (result.access_type === 'owner') {
       return {
-        farm: ownedFarm,
+        farm,
         role: 'OWNER' as Role,
         accessLevel: 'full'
       };
-    }
-
-    // Membership check second (for staff users)
-    const membership = await prisma.farmMember.findFirst({
-      where: {
-        userId: userId
-      },
-      include: {
-        farm: true
-      }
-    });
-
-    if (membership && membership.farm) {
+    } else {
+      // Member access - use the role from farm_members table
+      const memberRole = (result.member_role?.toUpperCase() === 'OWNER' ? 'OWNER' : 'MEMBER') as Role;
       return {
-        farm: membership.farm,
-        role: membership.role,
-        accessLevel: membership.role === 'OWNER' ? 'full' : 'limited'
+        farm,
+        role: memberRole,
+        accessLevel: memberRole === 'OWNER' ? 'full' : 'limited'
       };
     }
-
-    // No farm access found
-    throw new FarmContextError(
-      'User has no access to any farm',
-      'NO_ACCESS'
-    );
 
   } catch (error) {
     if (error instanceof FarmContextError) {
