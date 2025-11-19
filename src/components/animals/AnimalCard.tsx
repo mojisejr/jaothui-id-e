@@ -1,5 +1,5 @@
-import React from 'react'
-import { Bell } from 'lucide-react'
+import React, { useState } from 'react'
+import { Bell, Loader2 } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -59,9 +59,17 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
   notificationCount = 0,
   onPress
 }) => {
-  const handleCardClick = () => {
-    if (onPress) {
-      onPress()
+  const [isNavigating, setIsNavigating] = useState(false)
+
+  const handleCardClick = async () => {
+    if (onPress && !isNavigating) {
+      setIsNavigating(true)
+      try {
+        await onPress()
+      } catch (error) {
+        // Reset loading state if navigation fails
+        setIsNavigating(false)
+      }
     }
   }
 
@@ -93,10 +101,23 @@ const AnimalCard: React.FC<AnimalCardProps> = ({
 
   return (
     <Card
-      className="w-full border-border hover:shadow-xs transition-all cursor-pointer bg-card/80 backdrop-blur-xs"
+      className="w-full border-border hover:shadow-xs transition-all cursor-pointer bg-card/80 backdrop-blur-xs relative"
       onClick={handleCardClick}
+      aria-busy={isNavigating}
+      aria-disabled={isNavigating}
     >
       <CardContent className="p-3">
+        {/* Loading Overlay */}
+        {isNavigating && (
+          <div 
+            className="absolute inset-0 bg-background/60 backdrop-blur-[2px] flex items-center justify-center rounded-lg z-10"
+            aria-live="polite"
+            aria-label="กำลังโหลดข้อมูล"
+          >
+            <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          </div>
+        )}
+        
         {/* Single Row Layout */}
         <div className="flex items-center justify-between gap-4">
           {/* Left: Animal Name and Info */}

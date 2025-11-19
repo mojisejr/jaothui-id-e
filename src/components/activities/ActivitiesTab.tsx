@@ -119,8 +119,8 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ className = '' }) 
    * Handle activity card click (navigate to detail page)
    */
   const handleActivityClick = (activityId: string) => {
-    // Future: Navigate to activity detail page
-    console.log('Activity clicked:', activityId);
+    // Navigation is handled by ActivityCard component
+    // This function is kept for backward compatibility
   };
 
   /**

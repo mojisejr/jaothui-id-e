@@ -134,7 +134,8 @@ export async function GET(request: NextRequest) {
       whereClause.status = status;
     }
 
-    // Query animals with cursor pagination using createdAt as filter
+    // Optimized single-query approach using Prisma include with conditional counts
+    // This replaces 3 sequential queries with 1 query that includes activity counts
     const animals = await prisma.animal.findMany({
       where: {
         ...whereClause,
@@ -142,6 +143,17 @@ export async function GET(request: NextRequest) {
       },
       orderBy: { createdAt: 'desc' },
       take: 21, // Fetch one extra to determine if there are more records
+      include: {
+        _count: {
+          select: {
+            activities: {
+              where: {
+                status: { in: ['PENDING', 'OVERDUE'] }
+              }
+            }
+          }
+        }
+      }
     });
 
     // Determine if there are more records
@@ -156,6 +168,7 @@ export async function GET(request: NextRequest) {
       : null;
 
     // Count pending activities for TopNavigation notifications
+    // This is a separate requirement for the top navigation badge
     const pendingActivitiesCount = await prisma.activity.count({
       where: {
         farmId: farm.id,
@@ -163,26 +176,15 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Query activity counts per animal using groupBy for efficiency
-    const activityCounts = await prisma.activity.groupBy({
-      by: ['animalId'],
-      where: {
-        farmId: farm.id,
-        status: { in: ['PENDING', 'OVERDUE'] }
-      },
-      _count: { status: true },
+    // Transform animals to include notificationCount from the included _count
+    // Maintaining backward compatibility with existing API response structure
+    const animalsWithCounts = animals.map(animal => {
+      const { _count, ...animalData } = animal;
+      return {
+        ...animalData,
+        notificationCount: _count.activities,
+      };
     });
-
-    // Create efficient count map for O(1) lookup
-    const countMap = new Map(
-      activityCounts.map(item => [item.animalId, item._count.status])
-    );
-
-    // Enhance animals with notification counts
-    const animalsWithCounts = animals.map(animal => ({
-      ...animal,
-      notificationCount: countMap.get(animal.id) ?? 0,
-    }));
 
     return NextResponse.json({
       animals: animalsWithCounts,
