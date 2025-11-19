@@ -7,7 +7,8 @@
  * 
  * Features:
  * - Brand name (left): "ระบบ ID-Trace" - clickable link to /profile
- * - Notification bell (center): Bell icon with badge displaying notification count
+ * - Notification bell (center): Bell icon with badge displaying notification count from useNotifications hook
+ * - Refresh button: Manual refresh for notification count
  * - Logo (right): Buffalo/brand icon representing JAOTHUI
  * - Mobile-first responsive design (375px minimum width)
  * - Age-optimized sizing (44px minimum touch targets for elderly users)
@@ -26,29 +27,20 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Bell, RefreshCw, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useNotifications } from "@/hooks/useNotifications";
 
 /**
  * Props interface for TopNavigation component
  */
 export interface TopNavigationProps {
   /**
-   * Number of notifications to display in badge
-   * @default 0
-   */
-  notificationCount?: number;
-  
-  /**
    * Callback when brand name is clicked
    */
   onBrandClick?: () => void;
-  
-  /**
-   * Callback when notification bell is clicked
-   */
-  onNotificationClick?: () => void;
   
   /**
    * Callback when logo is clicked
@@ -66,24 +58,52 @@ export interface TopNavigationProps {
  * 
  * Displays a fixed top navigation bar with three sections:
  * 1. Brand name (left) - Links to /profile
- * 2. Notification bell (center) - Shows notification count
+ * 2. Notification bell (center) - Shows notification count from useNotifications hook
  * 3. Logo (right) - Brand identity
  * 
  * @example
  * ```tsx
  * <TopNavigation 
- *   notificationCount={2} 
- *   onNotificationClick={() => console.log('Notifications clicked')}
+ *   onBrandClick={() => console.log('Brand clicked')}
  * />
  * ```
  */
 export function TopNavigation({
-  notificationCount = 0,
   onBrandClick,
-  onNotificationClick,
   onLogoClick,
   className,
 }: TopNavigationProps) {
+  const router = useRouter();
+  const { badgeCount, breakdown, isLoading, error, mutate } = useNotifications();
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+
+  /**
+   * Handle bell icon click - Navigate to activities view with filters
+   */
+  const handleBellClick = () => {
+    router.push('/animals?tab=activities&status=pending,overdue');
+  };
+
+  /**
+   * Handle manual refresh of notification count
+   */
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await mutate();
+    } catch (err) {
+      console.error('Failed to refresh notifications:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Log errors in development
+  React.useEffect(() => {
+    if (error && process.env.NODE_ENV === 'development') {
+      console.error('Notification error:', error);
+    }
+  }, [error]);
   return (
     <nav
       className={cn(
@@ -113,21 +133,30 @@ export function TopNavigation({
           </div>
 
           {/* Notification Bell (Center) */}
-          <div className="flex items-center">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="icon"
-              onClick={onNotificationClick}
+              onClick={handleBellClick}
               className={cn(
                 "relative",
                 "min-h-[44px] min-w-[44px]",
                 "hover:bg-accent hover:text-accent-foreground",
                 "focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2"
               )}
-              aria-label={`การแจ้งเตือน ${notificationCount > 0 ? `${notificationCount} รายการ` : 'ไม่มีการแจ้งเตือน'}`}
+              aria-label={
+                badgeCount > 0
+                  ? `การแจ้งเตือน ${badgeCount} รายการ (${breakdown.pending} รอดำเนินการ, ${breakdown.overdue} เกินกำหนด)`
+                  : 'ไม่มีการแจ้งเตือน'
+              }
+              disabled={isLoading}
             >
-              <Bell className="h-5 w-5" aria-hidden="true" />
-              {notificationCount > 0 && (
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />
+              ) : (
+                <Bell className="h-5 w-5" aria-hidden="true" />
+              )}
+              {badgeCount > 0 && !isLoading && (
                 <span
                   className={cn(
                     "absolute -top-1 -right-1",
@@ -138,9 +167,31 @@ export function TopNavigation({
                   )}
                   aria-hidden="true"
                 >
-                  {notificationCount > 99 ? "99+" : notificationCount}
+                  {badgeCount > 99 ? "99+" : badgeCount}
                 </span>
               )}
+            </Button>
+
+            {/* Refresh Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleRefresh}
+              className={cn(
+                "min-h-[44px] min-w-[44px]",
+                "hover:bg-accent hover:text-accent-foreground",
+                "focus:outline-hidden focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              )}
+              aria-label="รีเฟรชการแจ้งเตือน"
+              disabled={isLoading || isRefreshing}
+            >
+              <RefreshCw
+                className={cn(
+                  "h-5 w-5",
+                  isRefreshing && "animate-spin"
+                )}
+                aria-hidden="true"
+              />
             </Button>
           </div>
 

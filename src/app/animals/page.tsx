@@ -9,6 +9,7 @@
  * Features:
  * - TopNavigation integration with notification count and callbacks
  * - TabNavigation between "กระบือปัจจุบัน" and "รายการแจ้งเตือน" tabs
+ * - URL parameter support for tab selection (?tab=activities)
  * - Infinite scroll with Intersection Observer at 1000px trigger distance
  * - Search and filter functionality with pagination reset
  * - AnimalCard components with notification indicators
@@ -31,7 +32,8 @@
  */
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "@/lib/auth-client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -59,6 +61,7 @@ interface Animal {
   color?: string | null;
   imageUrl?: string | null;
   createdAt: string;
+  notificationCount?: number;
 }
 
 interface AnimalsApiResponse {
@@ -72,12 +75,17 @@ interface AnimalsApiResponse {
 /**
  * Main AnimalListTabs Page Component
  */
-export default function AnimalListTabsPage() {
+function AnimalListTabsPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending, error } = useSession();
 
+  // Parse URL parameters for initial tab state
+  const urlTab = searchParams.get('tab');
+  const initialTab: TabType = urlTab === 'activities' ? 'notifications' : 'current';
+
   // State management for tabs and animals
-  const [activeTab, setActiveTab] = React.useState<TabType>('current');
+  const [activeTab, setActiveTab] = React.useState<TabType>(initialTab);
   const [animals, setAnimals] = React.useState<Animal[]>([]);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [statusFilter, setStatusFilter] = React.useState<AnimalStatus | 'all'>('all');
@@ -210,10 +218,6 @@ export default function AnimalListTabsPage() {
   /**
    * Handle TopNavigation callbacks
    */
-  const handleNotificationClick = React.useCallback(() => {
-    setActiveTab('notifications');
-  }, []);
-
   const handleBrandClick = React.useCallback(() => {
     router.push('/profile');
   }, [router]);
@@ -222,6 +226,41 @@ export default function AnimalListTabsPage() {
     // Future: Add logo action (e.g., show about, help, etc.)
     console.log("Logo clicked");
   }, []);
+
+  /**
+   * Handle tab change with URL synchronization
+   * 
+   * When user clicks a tab, update both state AND URL parameter
+   * to keep them in sync and prevent reverting behavior
+   */
+  const handleTabChange = React.useCallback((tab: TabType) => {
+    setActiveTab(tab);
+    
+    // Update URL parameter to match new tab
+    const currentParams = new URLSearchParams(searchParams.toString());
+    if (tab === 'notifications') {
+      currentParams.set('tab', 'activities');
+    } else {
+      currentParams.delete('tab');
+    }
+    
+    router.push(`?${currentParams.toString()}`);
+  }, [searchParams, router]);
+
+  /**
+   * Sync active tab with URL parameter on initial load or when URL changes externally
+   * (e.g., user hits back button or bookmarks a URL with ?tab=activities)
+   * 
+   * Only listen to searchParams changes, not activeTab changes
+   * to avoid syncing back when user clicks a tab
+   */
+  React.useEffect(() => {
+    const urlTab = searchParams.get('tab');
+    const newTab: TabType = urlTab === 'activities' ? 'notifications' : 'current';
+    if (newTab !== activeTab) {
+      setActiveTab(newTab);
+    }
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Initial load of animals when user is authenticated
@@ -305,8 +344,6 @@ export default function AnimalListTabsPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       {/* Top Navigation Bar - Fixed Position */}
       <TopNavigation
-        notificationCount={pendingActivitiesCount}
-        onNotificationClick={handleNotificationClick}
         onBrandClick={handleBrandClick}
         onLogoClick={handleLogoClick}
       />
@@ -318,7 +355,7 @@ export default function AnimalListTabsPage() {
           <div className="flex justify-center">
             <TabNavigation
               activeTab={activeTab}
-              onTabChange={setActiveTab}
+              onTabChange={handleTabChange}
               animalCount={animalCount}
             />
           </div>
@@ -405,7 +442,7 @@ export default function AnimalListTabsPage() {
                         <div className="flex justify-center">
                           <AnimalCard
                             animal={animal}
-                            notificationCount={Math.floor(Math.random() * 3)} // Mock notification count
+                            notificationCount={animal.notificationCount ?? 0}
                             onPress={() => {
                               // Navigate to animal details page
                               router.push(`/animals/${animal.id}`);
@@ -464,5 +501,33 @@ export default function AnimalListTabsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Wrapper component with Suspense boundary for useSearchParams
+ */
+export default function AnimalListTabsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center space-y-4">
+            <div
+              className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-current border-r-transparent align-[-0.125em] text-primary motion-reduce:animate-[spin_1.5s_linear_infinite]"
+              role="status"
+              aria-label="กำลังโหลด"
+            >
+              <span className="!absolute !-m-px !h-px !w-px !overflow-hidden !whitespace-nowrap !border-0 !p-0 ![clip:rect(0,0,0,0)]">
+                กำลังโหลด...
+              </span>
+            </div>
+            <p className="text-sm text-muted-foreground">กำลังโหลดข้อมูล...</p>
+          </div>
+        </div>
+      </div>
+    }>
+      <AnimalListTabsPageContent />
+    </Suspense>
   );
 }

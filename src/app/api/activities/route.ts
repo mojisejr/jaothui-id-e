@@ -43,7 +43,7 @@ export const dynamic = 'force-dynamic';
  * Query Parameters:
  * - farmId: Farm ID (optional, defaults to user's farm)
  * - animalId: Filter by specific animal (optional)
- * - status: Filter by status (PENDING, COMPLETED, CANCELLED, OVERDUE) (optional)
+ * - status: Filter by status (PENDING, COMPLETED, CANCELLED, OVERDUE) - supports comma-separated values (optional)
  * - startDate: Start date for filtering (optional)
  * - endDate: End date for filtering (optional)
  * - page: Page number for pagination (optional, default: 1)
@@ -123,21 +123,32 @@ export async function GET(request: NextRequest) {
     }
 
     if (status) {
+      // Support comma-separated status values (e.g., "pending,overdue")
+      const statusList = status.split(',').map(s => s.trim().toUpperCase());
       const validStatuses = ['PENDING', 'COMPLETED', 'CANCELLED', 'OVERDUE'];
-      if (!validStatuses.includes(status)) {
+      
+      // Validate all statuses
+      const invalidStatuses = statusList.filter(s => !validStatuses.includes(s));
+      if (invalidStatuses.length > 0) {
         return NextResponse.json(
           {
             success: false,
             error: {
               code: "INVALID_STATUS",
-              message: "สถานะไม่ถูกต้อง",
+              message: `สถานะไม่ถูกต้อง: ${invalidStatuses.join(', ')}`,
             },
             timestamp: new Date().toISOString(),
           },
           { status: 400 }
         );
       }
-      whereClause.status = status;
+      
+      // Use IN query for multiple statuses, single value for one status
+      if (statusList.length > 1) {
+        whereClause.status = { in: statusList };
+      } else if (statusList.length === 1) {
+        whereClause.status = statusList[0];
+      }
     }
 
     if (startDate || endDate) {

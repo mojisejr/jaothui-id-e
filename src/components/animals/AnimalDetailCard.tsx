@@ -68,8 +68,6 @@ export interface Animal {
 export interface AnimalDetailCardProps {
   /** Animal information to display */
   animal: Animal;
-  /** Notification count for TopNavigation */
-  notificationCount?: number;
   /** Additional CSS classes */
   className?: string;
 }
@@ -82,7 +80,6 @@ export interface AnimalDetailCardProps {
  */
 export function AnimalDetailCard({ 
   animal,
-  notificationCount = 0,
   className 
 }: AnimalDetailCardProps): React.ReactElement {
   const router = useRouter();
@@ -98,19 +95,11 @@ export function AnimalDetailCard({
     () => translateAnimalData(animalForTranslation),
     [animalForTranslation]
   );
-
-  // Handle notification click
-  const handleNotificationClick = React.useCallback(() => {
-    router.push('/animals?tab=notifications');
-  }, [router]);
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-surface">
       {/* TopNavigation Integration */}
-      <TopNavigation 
-        notificationCount={notificationCount}
-        onNotificationClick={handleNotificationClick}
-      />
+      <TopNavigation />
 
       {/* Main Content - Centered with padding for TopNavigation */}
       <main className="pt-20 pb-8 px-4">

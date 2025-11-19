@@ -163,8 +163,29 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Query activity counts per animal using groupBy for efficiency
+    const activityCounts = await prisma.activity.groupBy({
+      by: ['animalId'],
+      where: {
+        farmId: farm.id,
+        status: { in: ['PENDING', 'OVERDUE'] }
+      },
+      _count: { status: true },
+    });
+
+    // Create efficient count map for O(1) lookup
+    const countMap = new Map(
+      activityCounts.map(item => [item.animalId, item._count.status])
+    );
+
+    // Enhance animals with notification counts
+    const animalsWithCounts = animals.map(animal => ({
+      ...animal,
+      notificationCount: countMap.get(animal.id) ?? 0,
+    }));
+
     return NextResponse.json({
-      animals,
+      animals: animalsWithCounts,
       nextCursor,
       hasMore,
       pendingActivitiesCount,
