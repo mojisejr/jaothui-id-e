@@ -61,84 +61,77 @@ datasource db {
 │ lineId      │       │ name        │       │ farmId (FK) │
 │ username    │       │ province    │       │ tagId        │
 │ passwordHash│       │ code        │       │ name         │
-│ firstName   │       │ ownerId (FK)◄┘       │ type         │
-│ lastName    │       │ createdAt   │       │ gender       │
-│ avatarUrl   │       │ updatedAt   │       │ status       │
-│ createdAt   │       └─────────────┘       │ birthDate    │
-│ updatedAt   │               │           │ imageUrl     │
-└─────────────┘               │           │ weightKg     │
-        │                      │           │ heightCm     │
-        │                      │           │ motherTag    │
-        │                      │           │ fatherTag    │
-        │                      │           │ genome       │
-        │                      │           │ createdAt    │
-        │                      │           │ updatedAt    │
-        │                      │           └─────────────┘
-        │                      │                     │
-        │                      │           ┌─────────────┐
-        │                      │           │   Activity  │
-        │                      │           ├─────────────┤
-        │                      │           │ id (PK)     │
-        │             ┌────────┘           │ farmId (FK) │
-        │             │                    │ animalId (FK)◄┘
-        │    ┌────────┴────────┐           │ title       │
-        │    │   FarmMember    │           │ description │
-        │    ├─────────────────┤           │ activityDate│
-        │    │ id (PK)         │           │ dueDate     │
-        │    │ farmId (FK)     │           │ status      │
-        │    │ userId (FK)     │           │ statusReason│
-        │    │ role            │           │ createdBy (FK)│
-        │    │ joinedAt        │           │ completedBy(FK)│
-        │    └─────────────────┘           │ completedAt │
-        │                                │ createdAt   │
-        │                                │ updatedAt   │
-        │                                └─────────────┘
-        └─────────────────────────────────┘
+│ email       │       │ ownerId (FK)◄┘       │ type         │
+│ emailVerified│      │ createdAt   │       │ gender       │
+│ firstName   │       │ updatedAt   │       │ status       │
+│ ...         │       └─────────────┘       │ ...          │
+└──────┬──────┘               ▲           └──────┬──────┘
+       │                      │                  │
+       │                      │                  │
+┌──────▼──────┐       ┌───────┴───────┐  ┌───────▼───────┐
+│   Account   │       │   FarmMember  │  │   Activity    │
+├─────────────┤       ├───────────────┤  ├───────────────┤
+│ id (PK)     │       │ id (PK)       │  │ id (PK)       │
+│ userId (FK) │       │ farmId (FK)   │  │ animalId (FK) │
+│ providerId  │       │ userId (FK)   │  │ ...           │
+│ ...         │       │ ...           │  └───────────────┘
+└─────────────┘       └───────────────┘
+       ▲
+       │
+┌──────┴──────┐
+│   Session   │
+├─────────────┤
+│ id (PK)     │
+│ userId (FK) │
+│ token       │
+│ ...         │
+└─────────────┘
 ```
 
 ### Table Definitions
 
 #### User Table
 
-Stores user account information with support for both LINE OAuth and traditional authentication.
+Stores user account information, now integrated with `better-auth` for LINE OAuth and username/password authentication.
 
 ```sql
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    lineId VARCHAR(255) UNIQUE,                    -- LINE OAuth identifier (nullable for staff)
-    username VARCHAR(255) UNIQUE,                  -- Username for staff login (nullable for owners)
-    passwordHash TEXT,                             -- Hashed password (only for staff accounts)
+    lineId VARCHAR(255) UNIQUE,
+    username VARCHAR(255) UNIQUE,
+    passwordHash TEXT,
+    email VARCHAR(255) UNIQUE,
+    emailVerified BOOLEAN DEFAULT false,
     firstName VARCHAR(255),
     lastName VARCHAR(255),
-    avatarUrl TEXT,                               -- Profile image URL
+    avatarUrl TEXT,
     createdAt TIMESTAMPTZ(6) DEFAULT NOW(),
     updatedAt TIMESTAMPTZ(6) DEFAULT NOW()
 );
-
--- Indexes
-CREATE INDEX idx_users_lineId ON users(lineId);
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_createdAt ON users(createdAt);
 ```
 
 **Prisma Schema:**
 ```prisma
 model User {
-  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  lineId       String?   @unique @map("line_id")
-  username     String?   @unique
-  passwordHash String?   @map("password_hash")
-  firstName    String?
-  lastName     String?
-  avatarUrl    String?   @map("avatar_url")
-  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
-  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  lineId        String?   @unique @map("line_id")
+  username      String?   @unique
+  passwordHash  String?   @map("password_hash")
+  email         String?   @unique
+  emailVerified Boolean?  @default(false) @map("email_verified")
+  firstName     String?
+  lastName      String?
+  avatarUrl     String?   @map("avatar_url")
+  createdAt     DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt     DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
 
   // Relations
   ownedFarms    Farm[]       @relation("OwnerFarms")
   memberships   FarmMember[]
-  createdEvents Activity[] @relation("Creator")
+  createdEvents Activity[]   @relation("Creator")
   completedEvents Activity[] @relation("Completer")
+  sessions      Session[]
+  accounts      Account[]
 
   @@map("users")
 }
@@ -266,6 +259,8 @@ CREATE INDEX idx_animals_status ON animals(status);
 CREATE INDEX idx_animals_type ON animals(type);
 CREATE INDEX idx_animals_gender ON animals(gender);
 CREATE INDEX idx_animals_birthDate ON animals(birthDate);
+CREATE INDEX idx_animals_farmId_createdAt ON animals(farmId, createdAt);
+CREATE INDEX idx_animals_farmId_status ON animals(farmId, status);
 ```
 
 **Prisma Schema:**
@@ -294,6 +289,10 @@ model Animal {
   activities Activity[]
 
   @@unique([farmId, tagId])
+  @@index([farmId])
+  @@index([farmId, createdAt])
+  @@index([farmId, status])
+  @@index([tagId, farmId])
   @@map("animals")
 }
 ```
@@ -333,6 +332,9 @@ CREATE INDEX idx_activities_activityDate ON activities(activityDate);
 CREATE INDEX idx_activities_dueDate ON activities(dueDate);
 CREATE INDEX idx_activities_createdBy ON activities(createdBy);
 CREATE INDEX idx_activities_createdAt ON activities(createdAt);
+CREATE INDEX idx_activities_farmId_status ON activities(farmId, status);
+CREATE INDEX idx_activities_farmId_activityDate ON activities(farmId, activityDate);
+CREATE INDEX idx_activities_farmId_dueDate ON activities(farmId, dueDate);
 ```
 
 **Prisma Schema:**
@@ -359,7 +361,83 @@ model Activity {
   creator    User    @relation("Creator", fields: [createdBy], references: [id], onDelete: SetNull)
   completer User?   @relation("Completer", fields: [completedBy], references: [id], onDelete: SetNull)
 
+  @@index([farmId])
+  @@index([farmId, status])
+  @@index([farmId, activityDate])
+  @@index([animalId])
+  @@index([farmId, dueDate])
   @@map("activities")
+}
+```
+
+#### Session Table (`better-auth`)
+
+Stores user session information for authentication.
+
+**Prisma Schema:**
+```prisma
+model Session {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  token     String   @unique
+  userId    String   @map("user_id") @db.Uuid
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(6)
+  ipAddress String?  @map("ip_address")
+  userAgent String?  @map("user_agent")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+```
+
+#### Account Table (`better-auth`)
+
+Links user accounts with social providers (like LINE) or credential-based authentication.
+
+**Prisma Schema:**
+```prisma
+model Account {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  accountId            String    @map("account_id")
+  providerId           String    @map("provider_id")
+  userId               String    @map("user_id") @db.Uuid
+  accessToken          String?   @map("access_token")
+  refreshToken         String?   @map("refresh_token")
+  idToken              String?   @map("id_token")
+  accessTokenExpiresAt DateTime? @map("access_token_expires_at") @db.Timestamptz(6)
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at") @db.Timestamptz(6)
+  scope                String?
+  password             String?
+  createdAt            DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@map("accounts")
+}
+```
+
+#### Verification Table (`better-auth`)
+
+Stores tokens for processes like email verification or password resets.
+
+**Prisma Schema:**
+```prisma
+model Verification {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  identifier String
+  value      String
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(6)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt  DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@unique([identifier, value])
+  @@map("verifications")
 }
 ```
 
@@ -431,6 +509,8 @@ CREATE INDEX CONCURRENTLY idx_animals_farmId ON animals(farmId);
 CREATE INDEX CONCURRENTLY idx_animals_status ON animals(status);
 CREATE INDEX CONCURRENTLY idx_animals_farm_status ON animals(farmId, status);
 CREATE INDEX CONCURRENTLY idx_animals_type ON animals(type);
+CREATE INDEX CONCURRENTLY idx_animals_farmId_createdAt ON animals(farmId, createdAt);
+
 
 -- Activity table indexes
 CREATE INDEX CONCURRENTLY idx_activities_farmId ON activities(farmId);
@@ -438,6 +518,9 @@ CREATE INDEX CONCURRENTLY idx_activities_animalId ON activities(animalId);
 CREATE INDEX CONCURRENTLY idx_activities_status ON activities(status);
 CREATE INDEX CONCURRENTLY idx_activities_farm_animal ON activities(farmId, animalId);
 CREATE INDEX CONCURRENTLY idx_activities_due_status ON activities(dueDate, status);
+CREATE INDEX CONCURRENTLY idx_activities_farmId_status ON activities(farmId, status);
+CREATE INDEX CONCURRENTLY idx_activities_farmId_activityDate ON activities(farmId, activityDate);
+CREATE INDEX CONCURRENTLY idx_activities_farmId_dueDate ON activities(farmId, dueDate);
 ```
 
 #### Full-Text Search Indexes

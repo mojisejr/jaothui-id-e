@@ -112,7 +112,7 @@ Traditional buffalo farm management in Thailand relies on manual record-keeping,
 - **Database Performance**: < 50ms per query with proper indexing
 
 #### 7.2 Security Requirements
-- **Authentication**: Secure LINE OAuth + password hashing (Argon2/Bcrypt)
+- **Authentication**: Secure LINE OAuth + password hashing (bcryptjs)
 - **Data Protection**: HTTPS-only, secure session management
 - **Access Control**: Zero-trust permission validation on all operations
 - **Input Validation**: Server-side validation for all user inputs
@@ -204,7 +204,7 @@ Traditional buffalo farm management in Thailand relies on manual record-keeping,
 #### 10.2 Backend Stack
 - **Database**: Supabase (PostgreSQL)
 - **ORM**: Prisma for type-safe database operations
-- **Authentication**: better-auth with custom LINE OAuth integration
+- **Authentication**: better-auth with LINE OAuth and username/password support
 - **File Storage**: Supabase Storage for animal images
 - **API**: Next.js API routes with middleware protection
 

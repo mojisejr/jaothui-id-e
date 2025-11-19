@@ -74,73 +74,70 @@
 
 ### Color Theme
 
+The application uses a custom color theme defined with `oklch` values in `globals.css` for both light and dark modes. The primary colors are based on a yellow and green palette.
+
 #### Light Theme (Primary)
 ```css
+/* Light theme colors from globals.css */
 :root {
-  /* Background Colors */
-  --background: oklch(0 0 0);
-  --surface: oklch(0.98 0.005 240);
-  --card: oklch(1 0.008 240 / 0.8);
-  --border: oklch(0.85 0.005 240);
-
-  /* Text Colors */
-  --foreground: oklch(0.12 0.015 240);
-  --muted: oklch(0.45 0.02 240);
-  --muted-foreground: oklch(0.55 0.015 240);
-
-  /* Primary Colors */
-  --primary: oklch(0.7198 0.1329 81.7135);
-  --primary-foreground: oklch(0.98 0.01 81.7135);
-
-  /* Secondary Colors */
-  --secondary: oklch(0.95 0.01 240);
-  --secondary-foreground: oklch(0.15 0.015 240);
-
-  /* Accent Colors */
-  --accent: oklch(0.85 0.02 240);
-  --accent-foreground: oklch(0.2 0.015 240);
-
-  /* Status Colors */
-  --success: oklch(0.68 0.15 142);
-  --warning: oklch(0.75 0.15 65);
-  --destructive: oklch(0.65 0.15 15);
-  --info: oklch(0.65 0.15 220);
-
-  /* LINE Green */
-  --line-green: #00C300;
-  --line-green-foreground: oklch(1 0 0);
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.1448 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.1448 0 0);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.1448 0 0);
+    --primary: oklch(0.7198 0.1329 81.7135);
+    --primary-foreground: oklch(0.1448 0 0);
+    --secondary: oklch(0.9671 0.0133 81.7135);
+    --secondary-foreground: oklch(0.1448 0 0);
+    --muted: oklch(0.9671 0.0133 81.7135);
+    --muted-foreground: oklch(0.4676 0.0217 81.7135);
+    --accent: oklch(0.9671 0.0133 81.7135);
+    --accent-foreground: oklch(0.1448 0 0);
+    --destructive: oklch(0.6368 0.2078 25.3313);
+    --destructive-foreground: oklch(1 0 0);
+    --border: oklch(0.8963 0.0133 81.7135);
+    --input: oklch(1 0 0);
+    --ring: oklch(0.7198 0.1329 81.7135);
 }
 ```
 
 #### Dark Theme
 ```css
+/* Dark theme colors from globals.css */
 .dark {
-  /* Background Colors */
-  --background: oklch(0.12 0.015 240);
-  --surface: oklch(0.15 0.02 240);
-  --card: oklch(0.18 0.025 240 / 0.8);
-  --border: oklch(0.25 0.02 240);
-
-  /* Text Colors */
-  --foreground: oklch(0.98 0.01 240);
-  --muted: oklch(0.65 0.02 240);
-  --muted-foreground: oklch(0.55 0.015 240);
-
-  /* Component Colors */
-  --primary: oklch(0.72 0.15 81.7135);
-  --primary-foreground: oklch(0.08 0.02 81.7135);
-  --secondary: oklch(0.22 0.02 240);
-  --secondary-foreground: oklch(0.9 0.01 240);
+    --background: oklch(0 0 0);
+    --foreground: oklch(0.9911 0 0);
+    --card: oklch(0.2178 0 0);
+    --card-foreground: oklch(0.9911 0 0);
+    --popover: oklch(0.2178 0 0);
+    --popover-foreground: oklch(0.9911 0 0);
+    --primary: oklch(0.7198 0.1329 81.7135);
+    --primary-foreground: oklch(0.1448 0 0);
+    --secondary: oklch(0.3012 0 0);
+    --secondary-foreground: oklch(0.9911 0 0);
+    --muted: oklch(0.2178 0 0);
+    --muted-foreground: oklch(0.7155 0 0);
+    --accent: oklch(0.3600 0 0);
+    --accent-foreground: oklch(0.9911 0 0);
+    --destructive: oklch(0.6368 0.2078 25.3313);
+    --destructive-foreground: oklch(0.9970 0 0);
+    --border: oklch(0.3012 0 0);
+    --input: oklch(0.2178 0 0);
+    --ring: oklch(0.7198 0.1329 81.7135);
 }
 ```
 
 ### Typography
 
 #### Font Stack
+The application uses a standard sans-serif font stack, as defined in `globals.css` and applied via the `font-sans` class in `layout.tsx`.
+
 ```css
-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
-             'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
-             'Helvetica Neue', sans-serif;
+/* from globals.css */
+--font-sans: ui-sans-serif, system-ui, sans-serif;
+--font-serif: ui-serif, Georgia, serif;
+--font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 ```
 
 #### Type Scale
@@ -375,33 +372,38 @@ font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
 
 ### Page Designs
 
-#### 1. Home Page (Hero)
+The application's UI is composed of several key pages, each designed with a mobile-first and user-friendly approach.
+
+#### 1. Home Page (`/`)
+The landing page for unauthenticated users. It features a prominent logo and a single call-to-action to log in. Logged-in users are automatically redirected to their profile.
+
+**Implementation:**
+- `app/page.tsx`: Checks authentication status. If logged in, redirects to `/profile`. If not, displays the `HeroSection` component.
+- `components/ui/HeroSection.tsx`: A centered, glassmorphic card containing the logo, welcome text, and a "เข้าสู่ระบบ" (Login) button that links to `/login`.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ [Transparent Navbar: ระบบ ID-Trace | Logo]                │
-├─────────────────────────────────────────────────────────────┤
 │                                                             │
 │                    [JAOTHUI Logo]                           │
 │                                                             │
 │                 ยินดีต้อนรับเข้าสู่ระบบ                  │
 │                     ข้อมูลควาย                           │
-│                 (Inter 28px, center)                       │
+│                                                             │
+│         [เข้าสู่ระบบ] (Primary Button, links to /login)    │
 │                                                             │
 │               powered by JAOTHUI (small, muted)            │
-│                                                             │
-│                                                             │
-│                                                             │
-│         [เข้าสู่ระบบ] (Primary Button, full width)         │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-#### 2. Login Page
+#### 2. Login Page (`/login`)
+Provides two methods for authentication: LINE OAuth for farm owners and a username/password form for staff.
+
+**Implementation:**
+- `app/login/page.tsx`: A client component that handles both LINE and username/password sign-in flows using `authClient`. It manages form state, loading, and error display.
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ [Transparent Navbar: ระบบ ID-Trace | Logo]                │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
 │                    เข้าสู่ระบบ                           │
 │               (Inter 24px, bold, center)                   │
 │                                                             │
