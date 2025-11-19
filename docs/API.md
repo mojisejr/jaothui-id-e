@@ -110,92 +110,15 @@ All API responses follow a consistent JSON format:
 
 #### Authentication Endpoints
 
-##### POST /auth/line/login
-Initiate LINE OAuth login for farm owners.
+##### POST /auth/[...betterAuth]
+Handles all authentication routes via `better-auth`, including:
+- `/api/auth/signin/line`
+- `/api/auth/callback/line`
+- `/api/auth/signin/credentials`
+- `/api/auth/signout`
+- `/api/auth/session`
 
-**Request Body:**
-```json
-{
-  "lineAuthCode": "authorization_code_from_line",
-  "redirectUri": "https://yourapp.com/auth/callback"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid",
-      "lineId": "line_user_id",
-      "firstName": "สมชาย",
-      "lastName": "ใจดี",
-      "avatarUrl": "https://profile.line.com/...",
-      "role": "OWNER"
-    },
-    "farms": [
-      {
-        "id": "farm-uuid",
-        "name": "ฟาร์มของฉัน",
-        "province": "นนทบุรี"
-      }
-    ],
-    "sessionToken": "jwt_token"
-  }
-}
-```
-
-##### POST /auth/staff/login
-Authenticate farm staff with username and password.
-
-**Request Body:**
-```json
-{
-  "username": "staff_username",
-  "password": "secure_password"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "uuid",
-      "username": "staff_username",
-      "firstName": "มานี",
-      "lastName": "รักษา",
-      "role": "STAFF"
-    },
-    "farms": [
-      {
-        "id": "farm-uuid",
-        "name": "ฟาร์มสมศรี",
-        "role": "MEMBER"
-      }
-    ],
-    "sessionToken": "jwt_token"
-  }
-}
-```
-
-##### POST /auth/logout
-Terminate user session.
-
-**Headers:**
-```http
-Authorization: Bearer <session-token>
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "message": "Logged out successfully"
-}
-```
+Refer to `better-auth` documentation for detailed request and response formats. The system uses LINE (OIDC) and Credentials providers.
 
 ##### GET /auth/me
 Get current user information and permissions.
@@ -229,89 +152,10 @@ Authorization: Bearer <session-token>
 }
 ```
 
-#### User Management
-
-##### POST /users/staff
-Create new staff account (owner only).
-
-**Headers:**
-```http
-Authorization: Bearer <session-token>
-```
-
-**Request Body:**
-```json
-{
-  "farmId": "farm-uuid",
-  "username": "new_staff",
-  "password": "secure_password",
-  "firstName": "สมศรี",
-  "lastName": "รักษา",
-  "role": "MEMBER"
-}
-```
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "user": {
-      "id": "new-user-uuid",
-      "username": "new_staff",
-      "firstName": "สมศรี",
-      "lastName": "รักษา",
-      "role": "STAFF"
-    },
-    "membership": {
-      "id": "membership-uuid",
-      "farmId": "farm-uuid",
-      "userId": "new-user-uuid",
-      "role": "MEMBER",
-      "joinedAt": "2025-11-12T07:30:00.000Z"
-    }
-  }
-}
-```
-
-##### GET /users/staff
-List staff members for a farm (owner only).
-
-**Query Parameters:**
-- `farmId` (string, required): Farm ID
-- `page` (integer, optional): Page number (default: 1)
-- `limit` (integer, optional): Items per page (default: 20)
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "staff": [
-      {
-        "id": "user-uuid",
-        "username": "staff_username",
-        "firstName": "สมศรี",
-        "lastName": "รักษา",
-        "role": "STAFF",
-        "joinedAt": "2025-11-12T07:30:00.000Z",
-        "lastLogin": "2025-11-12T06:45:00.000Z"
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 1,
-      "totalPages": 1
-    }
-  }
-}
-```
-
 #### Farm Management
 
-##### GET /farms
-Get farms accessible to current user.
+##### GET /api/farm
+Retrieve the authenticated user's farm information.
 
 **Headers:**
 ```http
@@ -321,154 +165,125 @@ Authorization: Bearer <session-token>
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "farms": [
-      {
-        "id": "farm-uuid",
-        "name": "ฟาร์มของฉัน",
-        "province": "นนทบุรี",
-        "code": "FARM001",
-        "userRole": "OWNER",
-        "animalCount": 25,
-        "createdAt": "2025-01-15T08:00:00.000Z"
-      }
-    ]
+  "farm": {
+    "id": "farm-uuid",
+    "name": "ฟาร์มของฉัน",
+    "province": "นนทบุรี",
+    "ownerId": "user-uuid",
+    "createdAt": "2025-01-15T08:00:00.000Z",
+    "updatedAt": "2025-11-10T14:20:00.000Z"
   }
 }
 ```
 
-##### POST /farms
-Create new farm (owner only).
+##### POST /api/farm
+Ensures a farm exists for the authenticated user. If not, it creates one with default values.
+
+**Headers:**
+```http
+Authorization: Bearer <session-token>
+```
+
+**Response:**
+```json
+{
+  "farm": {
+    "id": "new-farm-uuid",
+    "name": "ฟาร์มของฉัน",
+    "province": "ไม่ระบุ",
+    "ownerId": "user-uuid",
+    "createdAt": "2025-11-12T07:30:00.000Z",
+    "updatedAt": "2025-11-12T07:30:00.000Z"
+  }
+}
+```
+
+##### PUT /api/farm
+Updates the authenticated user's farm information.
+
+**Headers:**
+```http
+Authorization: Bearer <session-token>
+```
 
 **Request Body:**
 ```json
 {
   "name": "ฟาร์มใหม่",
-  "province": "ขอนแก่น",
-  "code": "FARM002"
+  "province": "ขอนแก่น"
 }
 ```
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "farm": {
-      "id": "new-farm-uuid",
-      "name": "ฟาร์มใหม่",
-      "province": "ขอนแก่น",
-      "code": "FARM002",
-      "ownerId": "user-uuid",
-      "createdAt": "2025-11-12T07:30:00.000Z"
-    },
-    "membership": {
-      "id": "membership-uuid",
-      "farmId": "new-farm-uuid",
-      "userId": "user-uuid",
-      "role": "OWNER",
-      "joinedAt": "2025-11-12T07:30:00.000Z"
-    }
-  }
-}
-```
-
-##### GET /farms/{farmId}
-Get detailed farm information.
-
-**Path Parameters:**
-- `farmId` (string, required): Farm ID
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "farm": {
-      "id": "farm-uuid",
-      "name": "ฟาร์มของฉัน",
-      "province": "นนทบุรี",
-      "code": "FARM001",
-      "createdAt": "2025-01-15T08:00:00.000Z",
-      "updatedAt": "2025-11-10T14:20:00.000Z"
-    },
-    "stats": {
-      "totalAnimals": 25,
-      "activeAnimals": 23,
-      "transferredAnimals": 1,
-      "deceasedAnimals": 1,
-      "pendingActivities": 5,
-      "overdueActivities": 2
-    }
+  "farm": {
+    "id": "farm-uuid",
+    "name": "ฟาร์มใหม่",
+    "province": "ขอนแก่น",
+    "ownerId": "user-uuid",
+    "createdAt": "2025-01-15T08:00:00.000Z",
+    "updatedAt": "2025-11-12T07:30:00.000Z"
   }
 }
 ```
 
 #### Animal Management
 
-##### GET /animals
-List animals with filtering and pagination.
+##### GET /api/animals
+List animals with cursor-based pagination.
 
 **Query Parameters:**
-- `farmId` (string, required): Farm ID
-- `status` (string, optional): Filter by status (ACTIVE, TRANSFERRED, DECEASED, ALL)
-- `search` (string, optional): Search by tag ID or name
-- `page` (integer, optional): Page number (default: 1)
-- `limit` (integer, optional): Items per page (default: 20)
+- `cursor` (string, optional): ISO timestamp for pagination.
+- `search` (string, optional): Search by tag ID or name.
+- `status` (string, optional): Filter by status (ACTIVE, TRANSFERRED, DECEASED, SOLD).
 
 **Response:**
 ```json
 {
-  "success": true,
-  "data": {
-    "animals": [
-      {
-        "id": "animal-uuid",
-        "tagId": "001",
-        "name": "นาเดีย",
-        "type": "กระบือ",
-        "gender": "เมีย",
-        "status": "ACTIVE",
-        "birthDate": "2562-03-15",
-        "color": "ดำ",
-        "weightKg": 450.5,
-        "heightCm": 145,
-        "motherTag": "M001",
-        "fatherTag": "F001",
-        "imageUrl": "https://storage.supabase.co/...",
-        "createdAt": "2025-01-15T08:00:00.000Z",
-        "dueActivitiesCount": 2
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 20,
-      "total": 23,
-      "totalPages": 2
+  "animals": [
+    {
+      "id": "animal-uuid",
+      "tagId": "001",
+      "name": "นาเดีย",
+      "type": "WATER_BUFFALO",
+      "gender": "FEMALE",
+      "status": "ACTIVE",
+      "birthDate": "2019-03-15T00:00:00.000Z",
+      "color": "ดำ",
+      "weightKg": 450.5,
+      "heightCm": 145,
+      "motherTag": "M001",
+      "fatherTag": "F001",
+      "imageUrl": "https://storage.supabase.co/...",
+      "createdAt": "2025-01-15T08:00:00.000Z",
+      "notificationCount": 2
     }
-  }
+  ],
+  "nextCursor": "2025-01-14T10:00:00.000Z",
+  "hasMore": true,
+  "pendingActivitiesCount": 5
 }
 ```
 
-##### POST /animals
-Create new animal record.
+##### POST /api/animals
+Create a new animal record. The `farmId` is automatically inferred from the user's session.
 
-**Request Body (multipart/form-data):**
-```
-farmId: "farm-uuid"
-tagId: "002"
-type: "กระบือ"
-name: "ทองดี"
-gender: "ผู้"
-birthDate: "2563-05-20"
-color: "น้ำตาล"
-weightKg: 520
-heightCm: 150
-motherTag: "M001"
-fatherTag: "F002"
-genome: "optional-genome-data"
-image: [file] (optional)
+**Request Body (application/json):**
+```json
+{
+  "tagId": "002",
+  "type": "WATER_BUFFALO",
+  "name": "ทองดี",
+  "gender": "MALE",
+  "birthDate": "2023-05-20T00:00:00.000Z",
+  "color": "น้ำตาล",
+  "weightKg": 520,
+  "heightCm": 150,
+  "motherTag": "M001",
+  "fatherTag": "F002",
+  "genome": "optional-genome-data"
+}
 ```
 
 **Response:**
@@ -480,29 +295,30 @@ image: [file] (optional)
       "id": "new-animal-uuid",
       "tagId": "002",
       "name": "ทองดี",
-      "type": "กระบือ",
-      "gender": "ผู้",
+      "type": "WATER_BUFFALO",
+      "gender": "MALE",
       "status": "ACTIVE",
-      "birthDate": "2563-05-20",
+      "birthDate": "2023-05-20T00:00:00.000Z",
       "color": "น้ำตาล",
       "weightKg": 520,
       "heightCm": 150,
       "motherTag": "M001",
       "fatherTag": "F002",
-      "genome": null,
-      "imageUrl": "https://storage.supabase.co/...",
+      "genome": "optional-genome-data",
+      "imageUrl": null,
       "farmId": "farm-uuid",
       "createdAt": "2025-11-12T07:30:00.000Z"
     }
-  }
+  },
+  "message": "เพิ่มกระบือสำเร็จแล้ว"
 }
 ```
 
-##### GET /animals/{animalId}
+##### GET /api/animals/{animalId}
 Get detailed animal information.
 
 **Path Parameters:**
-- `animalId` (string, required): Animal ID
+- `animalId` (string, required): Animal UUID
 
 **Response:**
 ```json
@@ -513,42 +329,37 @@ Get detailed animal information.
       "id": "animal-uuid",
       "tagId": "001",
       "name": "นาเดีย",
-      "type": "กระบือ",
-      "gender": "เมีย",
+      "type": "WATER_BUFFALO",
+      "gender": "FEMALE",
       "status": "ACTIVE",
-      "birthDate": "2562-03-15",
+      "birthDate": "2022-03-15T00:00:00.000Z",
       "color": "ดำ",
       "weightKg": 450.5,
       "heightCm": 145,
       "motherTag": "M001",
       "fatherTag": "F001",
       "genome": null,
-      "imageUrl": "https://storage.supabase.co/...",
+      "imageUrl": null,
       "farmId": "farm-uuid",
       "createdAt": "2025-01-15T08:00:00.000Z",
-      "updatedAt": "2025-11-10T14:20:00.000Z"
-    },
-    "recentActivities": [
-      {
-        "id": "activity-uuid",
-        "title": "ให้อวัคซีน",
-        "activityDate": "2568-11-10",
-        "status": "COMPLETED",
-        "completedBy": "staff-name",
-        "completedAt": "2568-11-10T14:30:00.000Z"
+      "updatedAt": "2025-11-10T14:20:00.000Z",
+      "farm": {
+        "id": "farm-uuid",
+        "name": "ฟาร์มของฉัน",
+        "ownerId": "user-uuid"
       }
-    ]
+    }
   }
 }
 ```
 
-##### PUT /animals/{animalId}
+##### PUT /api/animals/{animalId}
 Update animal information.
 
 **Path Parameters:**
-- `animalId` (string, required): Animal ID
+- `animalId` (string, required): Animal UUID
 
-**Request Body:**
+**Request Body (application/json):**
 ```json
 {
   "name": "นาเดียทองคำ",
@@ -578,17 +389,18 @@ Update animal information.
       "genome": "updated-genome-data",
       "updatedAt": "2025-11-12T07:30:00.000Z"
     }
-  }
+  },
+  "message": "อัปเดตข้อมูลกระบือสำเร็จแล้ว"
 }
 ```
 
-##### DELETE /animals/{animalId}
-Soft delete animal (change status to TRANSFERRED or DECEASED).
+##### DELETE /api/animals/{animalId}
+Soft delete an animal by changing its status.
 
 **Path Parameters:**
-- `animalId` (string, required): Animal ID
+- `animalId` (string, required): Animal UUID
 
-**Request Body:**
+**Request Body (application/json):**
 ```json
 {
   "status": "TRANSFERRED",
@@ -606,23 +418,23 @@ Soft delete animal (change status to TRANSFERRED or DECEASED).
       "status": "TRANSFERRED",
       "updatedAt": "2025-11-12T07:30:00.000Z"
     }
-  }
+  },
+  "message": "เปลี่ยนสถานะกระบือเป็น TRANSFERRED สำเร็จแล้ว"
 }
 ```
 
 #### Activity Management
 
-##### GET /activities
-List activities with filtering.
+##### GET /api/activities
+List activities with filtering and pagination. `farmId` is automatically determined from the authenticated user's session.
 
 **Query Parameters:**
-- `farmId` (string, required): Farm ID
-- `animalId` (string, optional): Filter by specific animal
-- `status` (string, optional): Filter by status (PENDING, COMPLETED, CANCELLED, OVERDUE)
-- `startDate` (date, optional): Start date range (BE format: 2568-01-01)
-- `endDate` (date, optional): End date range (BE format: 2568-12-31)
-- `page` (integer, optional): Page number (default: 1)
-- `limit` (integer, optional): Items per page (default: 20)
+- `animalId` (string, optional): Filter by a specific animal's UUID.
+- `status` (string, optional): Filter by status. Can be a single status or a comma-separated list (e.g., `PENDING,OVERDUE`). Valid statuses: `PENDING`, `COMPLETED`, `CANCELLED`, `OVERDUE`.
+- `startDate` (string, optional): Start date for filtering (ISO 8601 format, e.g., `2025-01-01`).
+- `endDate` (string, optional): End date for filtering (ISO 8601 format, e.g., `2025-12-31`).
+- `page` (integer, optional): Page number for pagination (default: 1).
+- `limit` (integer, optional): Items per page (default: 20).
 
 **Response:**
 ```json
@@ -632,49 +444,54 @@ List activities with filtering.
     "activities": [
       {
         "id": "activity-uuid",
-        "title": "ให้อนม",
-        "description": "นมวัวนมโค 2 ลิตร",
-        "activityDate": "2568-11-12",
-        "dueDate": "2568-11-12",
+        "farmId": "farm-uuid",
+        "animalId": "animal-uuid",
+        "title": "ให้อาหาร",
+        "description": "อาหารเม็ด 2 กก.",
+        "activityDate": "2025-11-12T00:00:00.000Z",
+        "dueDate": null,
         "status": "PENDING",
+        "statusReason": null,
+        "createdBy": "user-uuid",
+        "completedBy": null,
+        "completedAt": null,
+        "createdAt": "2025-11-12T07:30:00.000Z",
+        "updatedAt": "2025-11-12T07:30:00.000Z",
         "animal": {
           "id": "animal-uuid",
           "tagId": "001",
           "name": "นาเดีย"
         },
-        "createdBy": {
+        "creator": {
           "id": "user-uuid",
-          "firstName": "สมศรี",
-          "lastName": "รักษา"
+          "firstName": "สมชาย",
+          "lastName": "ใจดี"
         },
-        "completedBy": null,
-        "completedAt": null,
-        "statusReason": null,
-        "createdAt": "2025-11-12T07:30:00.000Z",
-        "updatedAt": "2025-11-12T07:30:00.000Z"
+        "completer": null
       }
     ],
     "pagination": {
       "page": 1,
       "limit": 20,
-      "total": 15,
+      "total": 1,
       "totalPages": 1
     }
-  }
+  },
+  "timestamp": "2025-11-12T08:00:00.000Z"
 }
 ```
 
-##### POST /activities
-Create new activity.
+##### POST /api/activities
+Create a new activity. `farmId` and `createdBy` are automatically set from the user's session.
 
-**Request Body:**
+**Request Body (application/json):**
 ```json
 {
   "animalId": "animal-uuid",
   "title": "ตรวจสุขภาพ",
-  "description": "ตรวจสุขภาพทั่วไป วัดอุณหภูมิ น้ำหนัก",
-  "activityDate": "2568-11-15",
-  "dueDate": "2568-11-15",
+  "description": "ตรวจสุขภาพทั่วไป วัดอุณหภูมิ",
+  "activityDate": "2025-11-15T00:00:00.000Z",
+  "dueDate": "2025-11-15T00:00:00.000Z",
   "status": "PENDING"
 }
 ```
@@ -686,25 +503,27 @@ Create new activity.
   "data": {
     "activity": {
       "id": "new-activity-uuid",
-      "title": "ตรวจสุขภาพ",
-      "description": "ตรวจสุขภาพทั่วไป วัดอุณหภูมิ น้ำหนัก",
-      "activityDate": "2568-11-15",
-      "dueDate": "2568-11-15",
-      "status": "PENDING",
-      "animalId": "animal-uuid",
       "farmId": "farm-uuid",
+      "animalId": "animal-uuid",
+      "title": "ตรวจสุขภาพ",
+      "description": "ตรวจสุขภาพทั่วไป วัดอุณหภูมิ",
+      "activityDate": "2025-11-15T00:00:00.000Z",
+      "dueDate": "2025-11-15T00:00:00.000Z",
+      "status": "PENDING",
       "createdBy": "user-uuid",
-      "createdAt": "2025-11-12T07:30:00.000Z"
+      "createdAt": "2025-11-12T07:30:00.000Z",
+      // ... other fields
     }
-  }
+  },
+  "message": "สร้างกิจกรรมสำเร็จแล้ว"
 }
 ```
 
-##### GET /activities/{activityId}
-Get detailed activity information.
+##### GET /api/activities/{activityId}
+Get detailed information for a single activity.
 
 **Path Parameters:**
-- `activityId` (string, required): Activity ID
+- `activityId` (string, required): Activity UUID.
 
 **Response:**
 ```json
@@ -713,51 +532,46 @@ Get detailed activity information.
   "data": {
     "activity": {
       "id": "activity-uuid",
-      "title": "ให้อนม",
-      "description": "นมวัวนมโค 2 ลิตร",
-      "activityDate": "2568-11-12",
-      "dueDate": "2568-11-12",
+      "title": "ตรวจสุขภาพ",
+      "description": "ตรวจสุขภาพทั่วไป วัดอุณหภูมิ",
+      "activityDate": "2025-11-15T00:00:00.000Z",
       "status": "COMPLETED",
-      "statusReason": null,
+      "completedAt": "2025-11-15T14:00:00.000Z",
       "animal": {
         "id": "animal-uuid",
         "tagId": "001",
-        "name": "นาเดีย",
-        "imageUrl": "https://storage.supabase.co/..."
+        "name": "นาเดีย"
       },
-      "createdBy": {
+      "creator": {
         "id": "user-uuid",
-        "firstName": "สมศรี",
-        "lastName": "รักษา"
+        "firstName": "สมชาย",
+        "lastName": "ใจดี"
       },
-      "completedBy": {
-        "id": "user-uuid",
+      "completer": {
+        "id": "staff-uuid",
         "firstName": "มานี",
-        "lastName": "รักษา"
-      },
-      "completedAt": "2025-11-12T14:30:00.000Z",
-      "createdAt": "2025-11-12T07:30:00.000Z",
-      "updatedAt": "2025-11-12T14:30:00.000Z"
+        "lastName": "มีนา"
+      }
+      // ... other fields
     }
-  }
+  },
+  "timestamp": "2025-11-12T08:30:00.000Z"
 }
 ```
 
-##### PUT /activities/{activityId}
-Update activity status or details.
+##### PUT /api/activities/{activityId}
+Update an activity's status or details. When `status` is updated to `COMPLETED`, the `completedBy` and `completedAt` fields are automatically set.
 
 **Path Parameters:**
-- `activityId` (string, required): Activity ID
+- `activityId` (string, required): Activity UUID.
 
-**Request Body:**
+**Request Body (application/json):**
 ```json
 {
-  "title": "อัปเดต: ให้อนม",
-  "description": "นมวัวนมโค 2.5 ลิตร (เพิ่ม)",
-  "activityDate": "2568-11-12",
-  "dueDate": "2568-11-13",
+  "title": "อัปเดต: ตรวจสุขภาพ",
+  "description": "ตรวจสุขภาพทั่วไป วัดอุณหภูมิ (ปกติ)",
   "status": "COMPLETED",
-  "statusReason": "ดำเนินการสำเร็จ"
+  "statusReason": "ดำเนินการเรียบร้อย"
 }
 ```
 
@@ -768,32 +582,25 @@ Update activity status or details.
   "data": {
     "activity": {
       "id": "activity-uuid",
-      "title": "อัปเดต: ให้อนม",
-      "description": "นมวัวนมโค 2.5 ลิตร (เพิ่ม)",
-      "activityDate": "2568-11-12",
-      "dueDate": "2568-11-13",
+      "title": "อัปเดต: ตรวจสุขภาพ",
       "status": "COMPLETED",
-      "statusReason": "ดำเนินการสำเร็จ",
       "completedBy": "user-uuid",
       "completedAt": "2025-11-12T15:45:00.000Z",
       "updatedAt": "2025-11-12T15:45:00.000Z"
+      // ... other fields
     }
-  }
+  },
+  "message": "อัปเดตกิจกรรมสำเร็จแล้ว"
 }
 ```
 
 #### Notification Management
 
-##### GET /notifications/badge
-Get notification badge count (due/overdue activities).
-
-**Headers:**
-```http
-Authorization: Bearer <session-token>
-```
+##### GET /api/notifications/badge
+Get notification badge count. This endpoint returns the count of all `PENDING` and `OVERDUE` activities for the user's farm, which can be used to display a notification badge in the UI.
 
 **Query Parameters:**
-- `farmId` (string, optional): Filter by specific farm
+- `farmId` (string, optional): This parameter is available but not required, as the farm is automatically determined from the user's session.
 
 **Response:**
 ```json
@@ -802,17 +609,18 @@ Authorization: Bearer <session-token>
   "data": {
     "badgeCount": 3,
     "breakdown": {
-      "due": 2,
+      "pending": 2,
       "overdue": 1
     },
     "farmCounts": [
       {
         "farmId": "farm-uuid",
         "farmName": "ฟาร์มของฉัน",
-        "count": 2
+        "count": 3
       }
     ]
-  }
+  },
+  "timestamp": "2025-11-12T09:00:00.000Z"
 }
 ```
 

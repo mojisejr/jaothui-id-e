@@ -89,7 +89,7 @@ Testing: Jest + @testing-library/react
 ```
 Runtime: Node.js (via Next.js)
 API: Next.js API Routes
-Authentication: better-auth
+Authentication: better-auth (with Prisma adapter, LINE OAuth, and username/password)
 Database: PostgreSQL 15+ (Supabase)
 ORM: Prisma
 Validation: zod
@@ -119,7 +119,8 @@ app/
 │   ├── login/               # Login page
 │   └── callback/            # OAuth callback
 ├── api/                      # API routes
-│   ├── auth/               # Authentication endpoints
+│   ├── auth/               # Authentication endpoints (using better-auth catch-all)
+│   │   └── [...betterAuth]/ # Handles all auth routes
 │   ├── users/              # User management
 │   ├── farms/              # Farm management
 │   ├── animals/            # Animal management
@@ -184,37 +185,15 @@ src/
 #### 2. API Layer
 
 **Authentication Middleware**
-```typescript
-// middleware.ts
-import { auth } from "@/lib/auth"
-import { NextResponse } from "next/server"
-
-export default auth((req) => {
-  const { nextUrl } = req
-  const isLoggedIn = !!req.auth
-
-  // Protect API routes
-  if (nextUrl.pathname.startsWith("/api/") && !isLoggedIn) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-  }
-
-  // Redirect unauthenticated users to login
-  if (!isLoggedIn && nextUrl.pathname !== "/login") {
-    return NextResponse.redirect(new URL("/login", nextUrl))
-  }
-
-  return NextResponse.next()
-})
-
-export const config = {
-  matcher: [
-    "/((?!api|_next/static|_next/image|favicon.ico).*)",
-    "/api/:path*",
-  ],
-}
-```
+The `better-auth` library provides middleware that is integrated into its core handler. Additional custom logic, like auto-creating a farm for new LINE users, is handled via `better-auth` hooks.
 
 **API Route Structure**
+```typescript
+// app/api/auth/[...betterAuth]/route.ts
+import { handler } from "@/lib/auth"
+export const { GET, POST } = handler
+```
+
 ```typescript
 // api/animals/[id]/route.ts
 import { NextRequest, NextResponse } from "next/server"
@@ -318,12 +297,9 @@ export async function dbTransaction<T>(
 ### Data Flow Architecture
 
 #### 1. Authentication Flow
-```
-User Request → Frontend → LINE OAuth/Username → API → better-auth →
-JWT Token → Frontend → Secure Cookie → Auth Middleware → Protected Route
-```
+The system uses `better-auth` to handle authentication.
 
-**Authentication Flow Details**
+**LINE OAuth Flow (Farm Owners)**
 ```mermaid
 sequenceDiagram
     participant User as U
@@ -333,15 +309,34 @@ sequenceDiagram
     participant DB as D
 
     U->>F: Click "Login with LINE"
-    F->>L: OAuth Redirect
-    L->>F: Authorization Code
-    F->>A: POST /auth/line/login
-    A->>L: Exchange Code for Token
-    L->>A: Access Token + User Info
-    A->>D: Find/Create User
-    A->>A: Create JWT Session
-    A->>F: Session Token + User Data
-    F->>U: Redirect to Profile
+    F->>A: Navigates to /api/auth/signin/line
+    A->>L: Redirect to LINE OAuth screen
+    L-->>U: User authenticates with LINE
+    L->>A: Redirect to /api/auth/callback/line with auth code
+    A->>L: Exchange code for access token
+    L->>A: Return access token and user profile
+    A->>DB: Find or create user in `User` table, create `Account` link
+    A->>A: Create JWT session, store in `Session` table
+    A-->>F: Set secure, HTTP-only session cookie
+    F->>DB: (via hook) Create a default farm if it's a new user
+    F->>U: Redirect to profile page
+```
+
+**Staff Login Flow (Username/Password)**
+```mermaid
+sequenceDiagram
+    participant User as U
+    participant Frontend as F
+    participant API as A
+    participant DB as D
+
+    U->>F: Submits username and password
+    F->>A: POST /api/auth/signin/username
+    A->>DB: Find user by username
+    A->>A: Verify password hash using bcrypt
+    A->>DB: Create JWT session, store in `Session` table
+    A-->>F: Set secure, HTTP-only session cookie
+    F->>U: Redirect to profile page
 ```
 
 #### 2. Data Access Flow
@@ -418,54 +413,48 @@ export async function uploadAnimalImage(animalId: string, file: File) {
 **better-auth Configuration**
 ```typescript
 // lib/auth.ts
-import { betterAuth } from "better-auth"
-import { prismaAdapter } from "better-auth/adapters/prisma"
-import { LINE } from "better-auth/providers/line"
+import { betterAuth } from "better-auth";
+import { createAuthMiddleware } from "better-auth/api";
+import { prismaAdapter } from "better-auth/adapters/prisma";
+import { username } from "better-auth/plugins";
+import { prisma } from "@/lib/prisma";
 
-export const { auth, signIn, signOut } = betterAuth({
-  database: prismaAdapter(db, {
+export const auth = betterAuth({
+  plugins: [
+    username({
+      minUsernameLength: 3,
+      usernameValidator: (username) => /^[a-zA-Z0-9_-]+$/.test(username),
+    }),
+  ],
+  database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
+  baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+  secret: process.env.BETTER_AUTH_SECRET || "development-secret-key",
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: false,
+    // ... Vercel-compatible bcrypt hashing functions
   },
-  providers: [
-    {
-      id: "line",
-      name: "LINE",
-      type: "oidc",
-      issuer: "https://access.line.me",
-      clientId: process.env.LINE_CLIENT_ID!,
-      clientSecret: process.env.LINE_CLIENT_SECRET!,
-      wellKnown: "https://access.line.me/.well-known/openid_configuration",
+  socialProviders: {
+    line: {
+      clientId: process.env.LINE_CLIENT_ID || "",
+      clientSecret: process.env.LINE_CLIENT_SECRET || "",
+      enabled: true,
+      // ... profile mapping
     },
-  ],
+  },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
     updateAge: 60 * 60 * 24, // 1 day
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 60 * 24 * 7,
-    },
   },
-  callbacks: {
-    async signIn({ user, account }) {
-      // Custom sign-in logic
-      return true
-    },
-    async session({ session, user }) {
-      // Customize session data
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          role: user.role,
-        },
-      }
-    },
+  hooks: {
+    after: createAuthMiddleware(async (ctx) => {
+      // ... logic to auto-create farm for new LINE users
+    }),
   },
-})
+  // ... other security settings
+});
 ```
 
 #### 2. Authorization Security
