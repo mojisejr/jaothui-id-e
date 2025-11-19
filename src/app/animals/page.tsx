@@ -210,10 +210,6 @@ export default function AnimalListTabsPage() {
   /**
    * Handle TopNavigation callbacks
    */
-  const handleNotificationClick = React.useCallback(() => {
-    setActiveTab('notifications');
-  }, []);
-
   const handleBrandClick = React.useCallback(() => {
     router.push('/profile');
   }, [router]);
@@ -305,8 +301,6 @@ export default function AnimalListTabsPage() {
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       {/* Top Navigation Bar - Fixed Position */}
       <TopNavigation
-        notificationCount={pendingActivitiesCount}
-        onNotificationClick={handleNotificationClick}
         onBrandClick={handleBrandClick}
         onLogoClick={handleLogoClick}
       />

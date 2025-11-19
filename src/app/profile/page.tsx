@@ -233,21 +233,10 @@ export default function ProfilePage() {
     return null;
   }
 
-  /**
-   * Handle notification clicks (placeholder for future implementation)
-   */
-  const handleNotificationClick = () => {
-    // Future: Navigate to notifications page or show notification panel
-    console.log("Notifications clicked");
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
       {/* Top Navigation Bar - Fixed Position */}
-      <TopNavigation
-        notificationCount={2} // Mock notification count
-        onNotificationClick={handleNotificationClick}
-      />
+      <TopNavigation />
 
       {/* Main Content Area - with top padding for fixed navigation */}
       <div className="pt-30 px-4 py-6">

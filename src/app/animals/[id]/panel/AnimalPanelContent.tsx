@@ -99,8 +99,6 @@ export interface AnimalPanelContentProps {
   animal: Animal;
   /** Activities for this animal */
   activities?: Activity[];
-  /** Notification count for TopNavigation */
-  notificationCount?: number;
   /** Additional CSS classes */
   className?: string;
 }
@@ -141,7 +139,6 @@ const TABS: TabItem[] = [
 export function AnimalPanelContent({ 
   animal: initialAnimal,
   activities: initialActivities = [],
-  notificationCount = 0,
   className 
 }: AnimalPanelContentProps): React.ReactElement {
   const router = useRouter();
@@ -157,11 +154,6 @@ export function AnimalPanelContent({
   
   // State for success messages
   const [successMessage, setSuccessMessage] = React.useState<string>("");
-
-  // Handle notification click
-  const handleNotificationClick = React.useCallback(() => {
-    router.push('/animals?tab=notifications');
-  }, [router]);
 
   /**
    * Handle animal update success
@@ -243,10 +235,7 @@ export function AnimalPanelContent({
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-surface">
       {/* TopNavigation Integration */}
-      <TopNavigation 
-        notificationCount={notificationCount}
-        onNotificationClick={handleNotificationClick}
-      />
+      <TopNavigation />
 
       {/* Main Content - Centered with padding for TopNavigation */}
       <main className="pt-20 pb-8 px-4">

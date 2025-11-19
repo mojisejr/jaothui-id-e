@@ -174,7 +174,6 @@ export default async function AnimalPage({ params }: AnimalPageProps) {
       <Suspense fallback={<AnimalDetailSkeleton />}>
         <AnimalDetailCard 
           animal={animalData}
-          notificationCount={notificationCount}
         />
       </Suspense>
     );
