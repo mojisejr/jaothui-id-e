@@ -410,6 +410,60 @@ describe('Farm Context Resolver', () => {
     });
   });
 
+  describe('Performance Optimization', () => {
+    it('should use single database query instead of two sequential queries', async () => {
+      // Arrange - Mock query result
+      const queryResult = [{
+        access_type: 'owner' as const,
+        id: mockFarmId,
+        farm_name: 'Test Farm',
+        farm_code: 'TF001',
+        description: null,
+        province: 'Bangkok',
+        owner_id: mockUserId,
+        created_at: mockFarm.createdAt,
+        updated_at: mockFarm.updatedAt,
+        member_role: null,
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
+
+      // Act
+      await getUserFarmContext(mockUserId);
+
+      // Assert - Verify only one database call
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+      
+      // Verify the old sequential methods are NOT called
+      expect(mockPrisma.farm.findFirst).not.toHaveBeenCalled();
+      expect(mockPrisma.farmMember.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('should prioritize ownership results in the optimized query', async () => {
+      // Arrange - Mock query returns ownership result
+      const queryResult = [{
+        access_type: 'owner' as const,
+        id: mockFarmId,
+        farm_name: 'Test Farm',
+        farm_code: 'TF001',
+        description: null,
+        province: 'Bangkok',
+        owner_id: mockUserId,
+        created_at: mockFarm.createdAt,
+        updated_at: mockFarm.updatedAt,
+        member_role: null,
+      }];
+      mockPrisma.$queryRaw.mockResolvedValue(queryResult);
+
+      // Act
+      const result = await getUserFarmContext(mockUserId);
+
+      // Assert - Ownership takes priority
+      expect(result.role).toBe('OWNER');
+      expect(result.accessLevel).toBe('full');
+      expect(mockPrisma.$queryRaw).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('FarmContextError', () => {
     it('should create error with correct properties', () => {
       // Act
