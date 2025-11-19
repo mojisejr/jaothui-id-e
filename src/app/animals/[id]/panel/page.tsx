@@ -197,7 +197,6 @@ export default async function AnimalPanelPage({ params }: AnimalPanelPageProps) 
         <AnimalPanelContent 
           animal={animalData}
           activities={activities}
-          notificationCount={notificationCount}
         />
       </Suspense>
     );
