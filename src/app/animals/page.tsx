@@ -228,7 +228,31 @@ function AnimalListTabsPageContent() {
   }, []);
 
   /**
-   * Sync active tab with URL parameter
+   * Handle tab change with URL synchronization
+   * 
+   * When user clicks a tab, update both state AND URL parameter
+   * to keep them in sync and prevent reverting behavior
+   */
+  const handleTabChange = React.useCallback((tab: TabType) => {
+    setActiveTab(tab);
+    
+    // Update URL parameter to match new tab
+    const currentParams = new URLSearchParams(searchParams.toString());
+    if (tab === 'notifications') {
+      currentParams.set('tab', 'activities');
+    } else {
+      currentParams.delete('tab');
+    }
+    
+    router.push(`?${currentParams.toString()}`);
+  }, [searchParams, router]);
+
+  /**
+   * Sync active tab with URL parameter on initial load or when URL changes externally
+   * (e.g., user hits back button or bookmarks a URL with ?tab=activities)
+   * 
+   * Only listen to searchParams changes, not activeTab changes
+   * to avoid syncing back when user clicks a tab
    */
   React.useEffect(() => {
     const urlTab = searchParams.get('tab');
@@ -236,7 +260,7 @@ function AnimalListTabsPageContent() {
     if (newTab !== activeTab) {
       setActiveTab(newTab);
     }
-  }, [searchParams, activeTab]);
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /**
    * Initial load of animals when user is authenticated
@@ -331,7 +355,7 @@ function AnimalListTabsPageContent() {
           <div className="flex justify-center">
             <TabNavigation
               activeTab={activeTab}
-              onTabChange={setActiveTab}
+              onTabChange={handleTabChange}
               animalCount={animalCount}
             />
           </div>
