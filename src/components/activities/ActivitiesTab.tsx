@@ -6,7 +6,9 @@
  * 
  * Features:
  * - Activity list with ActivityCard components
- * - Status filtering using ActivityFilters
+ * - Status filtering using ActivityFilters with URL parameter support
+ * - Multi-select status filtering (PENDING, OVERDUE, etc.)
+ * - URL parameter parsing (?status=pending,overdue)
  * - Infinite scroll using Intersection Observer
  * - Loading states and error handling
  * - Empty state messages
@@ -23,10 +25,12 @@
 
 'use client';
 
-import React, { useRef, useCallback, useEffect } from 'react';
-import { RefreshCw, AlertCircle } from 'lucide-react';
+import React, { useRef, useCallback, useEffect, useState } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { RefreshCw, AlertCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useActivities } from '@/hooks/useActivities';
+import { ActivityStatus } from '@/types/activity';
 import ActivityCard from './ActivityCard';
 import ActivityFilters from './ActivityFilters';
 
@@ -35,6 +39,24 @@ interface ActivitiesTabProps {
 }
 
 export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ className = '' }) => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Parse status filters from URL parameter (e.g., ?status=pending,overdue)
+  const statusParam = searchParams.get('status');
+  const initialStatusFilters = React.useMemo(() => {
+    if (!statusParam) return [];
+    return statusParam
+      .split(',')
+      .map(s => s.trim().toUpperCase())
+      .filter(s => ['PENDING', 'COMPLETED', 'CANCELLED', 'OVERDUE'].includes(s)) as ActivityStatus[];
+  }, [statusParam]);
+
+  const [activeStatusFilters, setActiveStatusFilters] = useState<ActivityStatus[]>(initialStatusFilters);
+
+  // Build combined status filter for the hook
+  const combinedStatusFilter = activeStatusFilters.length > 0 ? activeStatusFilters.join(',') : 'ALL';
+
   const {
     activities,
     isLoading,
@@ -44,10 +66,10 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ className = '' }) 
     loadMore,
     refresh,
     updateActivityStatus,
-    setStatusFilter,
   } = useActivities({
     limit: 20,
     autoFetch: true,
+    status: combinedStatusFilter as any,
   });
 
   // Intersection Observer for infinite scroll
@@ -113,6 +135,60 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ className = '' }) 
     }
   };
 
+  /**
+   * Handle status filter toggle
+   */
+  const handleFilterToggle = useCallback((status: ActivityStatus) => {
+    const newFilters = activeStatusFilters.includes(status)
+      ? activeStatusFilters.filter(s => s !== status)
+      : [...activeStatusFilters, status];
+
+    setActiveStatusFilters(newFilters);
+
+    // Update URL with new filters
+    const currentParams = new URLSearchParams(searchParams.toString());
+    if (newFilters.length > 0) {
+      currentParams.set('status', newFilters.map(s => s.toLowerCase()).join(','));
+    } else {
+      currentParams.delete('status');
+    }
+
+    // Keep the tab parameter if it exists
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      currentParams.set('tab', tabParam);
+    }
+
+    router.push(`?${currentParams.toString()}`);
+  }, [activeStatusFilters, searchParams, router]);
+
+  /**
+   * Clear all filters
+   */
+  const handleClearFilters = useCallback(() => {
+    setActiveStatusFilters([]);
+    
+    const currentParams = new URLSearchParams(searchParams.toString());
+    currentParams.delete('status');
+    
+    // Keep the tab parameter if it exists
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      currentParams.set('tab', tabParam);
+    }
+
+    router.push(`?${currentParams.toString()}`);
+  }, [searchParams, router]);
+
+  /**
+   * Sync active filters with URL parameter on mount and when URL changes
+   */
+  useEffect(() => {
+    if (JSON.stringify(initialStatusFilters) !== JSON.stringify(activeStatusFilters)) {
+      setActiveStatusFilters(initialStatusFilters);
+    }
+  }, [initialStatusFilters]); // eslint-disable-line react-hooks/exhaustive-deps
+
   return (
     <div className={`w-full ${className}`}>
       {/* Header with Refresh Button */}
@@ -138,11 +214,34 @@ export const ActivitiesTab: React.FC<ActivitiesTabProps> = ({ className = '' }) 
       </div>
 
       {/* Status Filters */}
-      <ActivityFilters
-        activeFilter="ALL"
-        onFilterChange={setStatusFilter}
-        className="mb-4"
-      />
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <ActivityFilters
+            activeFilters={activeStatusFilters}
+            onFilterToggle={handleFilterToggle}
+            className="flex-1"
+          />
+          {activeStatusFilters.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClearFilters}
+              className="ml-2 h-10 px-3 text-muted-foreground"
+              aria-label="ล้างตัวกรอง"
+            >
+              <X className="w-4 h-4 mr-1" />
+              ล้าง
+            </Button>
+          )}
+        </div>
+        
+        {/* Active filters indicator */}
+        {activeStatusFilters.length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            กำลังกรอง: {activeStatusFilters.length} สถานะ
+          </p>
+        )}
+      </div>
 
       {/* Error State */}
       {error && (
